@@ -123,7 +123,7 @@ struct SigMgrEdDSA final : SigMgr {
      * except for Signature so skips the "set up the Signature
      * field" section in sign() above
      */
-    bool sign(ndn::Data& data, const SigInfo& si, const keyVal& sk) override final {
+    bool sign(ndn_ind::Data& data, const SigInfo& si, const keyVal& sk) override final {
         if(sk.empty() || si.empty()) {
             throw std::runtime_error("SigMgrEdDSA: can't sign without a key and siginfo");
         }
@@ -137,17 +137,17 @@ struct SigMgrEdDSA final : SigMgr {
     }
 
     // common validate logic for both API calls
-    bool validate(const ndn::Data& data, const keyVal& pk) const {
+    bool validate(const ndn_ind::Data& data, const keyVal& pk) const {
         auto sig = data.getSignature()->getSignature();
         if((sig.size()) != crypto_sign_BYTES) return false;
         const auto& wf = data.wireEncode();
         if (crypto_sign_verify_detached(sig.buf(), wf.signedBuf(), wf.signedSize(), pk.data()) != 0) return false;
         return true;
     }
-    bool validate(const ndn::Data& data, const dct_Cert& scert) override final {
+    bool validate(const ndn_ind::Data& data, const dct_Cert& scert) override final {
         return validate(data, *(scert.getContent()));
     }
-    bool validate(const ndn::Data& data) override final {
+    bool validate(const ndn_ind::Data& data) override final {
         if (m_keyCb == 0) {
             throw std::runtime_error("SigMgrEdDSA validate needs callback to get signing keys");
         }

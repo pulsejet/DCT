@@ -47,7 +47,7 @@ static inline certBundle rdCertBundle(const std::vector<uint8_t>& buf) {
         if (obj[0] != 6) throw std::runtime_error(format("invalid bundle format (type {})", obj[0]));
     
         // have a cert (type tlv::Data)
-        auto data = ndn::Data();
+        auto data = ndn_ind::Data();
         data.wireDecode(obj.data(), obj.size());
         auto cert = dctCert(data);
         // if the next item is a key, stick it in the bundle with the cert

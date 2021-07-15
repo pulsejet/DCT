@@ -37,15 +37,15 @@ struct SigMgrNULL final : SigMgr {
 
     SigMgrNULL() : SigMgr(stNULL) {}
 
-    bool sign(ndn::Data& data, const SigInfo&, const keyVal&) override final {
+    bool sign(ndn_ind::Data& data, const SigInfo&, const keyVal&) override final {
         data.wireEncode();
         return true;
     }
     /*
      * Here just return true
      */
-    bool validate(const ndn::Data&) override final { return true; }
-    bool validate(const ndn::Data&, const dct_Cert&) override final { return true; }
+    bool validate(const ndn_ind::Data&) override final { return true; }
+    bool validate(const ndn_ind::Data&, const dct_Cert&) override final { return true; }
 
     bool needsKey() const noexcept override final { return 0; };
 };

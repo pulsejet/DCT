@@ -50,7 +50,7 @@ using thumbPrint = std::array<uint8_t,32>;
 using connectedCb = std::function<void(bool)>;
 using pubCnt = uint16_t;
 using addKeyCb = std::function<void(const keyVal&, uint64_t)>;
-using Timer = ndn::scheduler::ScopedEventId;
+using Timer = ndn_ind::scheduler::ScopedEventId;
 
 /*
  * DistGKey Publications contain the creation time of the symmetric key and a list of
@@ -63,7 +63,7 @@ static constexpr int max_gkRs = (syncps::maxPubSize - 12) /(32+encGKeySz);
 
 struct DistGKey
 {    
-    ndn::Name m_pubPrefix;     //prefix for group symmetric key
+    ndn_ind::Name m_pubPrefix;     //prefix for group symmetric key
     SigMgrAny m_syncSigMgr{sigMgrByType("EdDSA")};      // to sign/validate SyncData packets
     SigMgrAny m_keySigMgr{sigMgrByType("EdDSA")};    // to sign/validate key list Publications
     syncps::SyncPubsub m_sync;
@@ -218,7 +218,7 @@ struct DistGKey
      */
     void addToCollection(pubCnt d, std::chrono::system_clock::time_point ts, const std::vector<uint8_t>& c)
     {
-        ndn::Name n(m_pubPrefix);
+        ndn_ind::Name n(m_pubPrefix);
         n.append(sysID());   //for development/debug
         n.appendNumber(d);
         n.appendTimestamp(ts);

@@ -39,7 +39,7 @@
 #include "dct/distributors/dist_gkey.hpp"
 
 
-using Publication = ndn::Data;
+using Publication = ndn_ind::Data;
 
 //template<typename sPub>
 struct DCTmodel {
@@ -192,8 +192,8 @@ struct DCTmodel {
         const auto& tp = cs_.Chains()[0]; // thumbprint of signing cert
         pubSigMgr().updateSigningKey(cs_.key(tp), cs_[tp]);
         wireSigMgr().updateSigningKey(cs_.key(tp), cs_[tp]);
-        pubSigMgr().setKeyCb([&cs=cs_](const ndn::Data& d) -> const keyVal& { return *(cs[d].getContent()); });
-        wireSigMgr().setKeyCb([&cs=cs_](const ndn::Data& d) -> const keyVal& { return *(cs[d].getContent()); });
+        pubSigMgr().setKeyCb([&cs=cs_](const ndn_ind::Data& d) -> const keyVal& { return *(cs[d].getContent()); });
+        wireSigMgr().setKeyCb([&cs=cs_](const ndn_ind::Data& d) -> const keyVal& { return *(cs[d].getContent()); });
 
 
         // SPub need access to builder's 'index' function to translate component names to indices

@@ -48,16 +48,16 @@ extern "C" {
     #include <sodium.h>
 };
 
-// type signatures for validate() callbacks 
-using ValidDataCb = std::function<void(ndn::Data&)>;
-using FailedDataCb = std::function<void(ndn::Data&, const std::string&)>;
+// type signatures for validate() callbacks
+using ValidDataCb = std::function<void(ndn_ind::Data&)>;
+using FailedDataCb = std::function<void(ndn_ind::Data&, const std::string&)>;
 
 using keyVal = std::vector<uint8_t>;
 using SigInfo = std::vector<uint8_t>;
 using SigType = uint8_t;
-using dct_Cert = ndn::Data;
+using dct_Cert = ndn_ind::Data;
 
-using KeyCb = std::function<const std::vector<uint8_t>&(const ndn::Data&)>;
+using KeyCb = std::function<const std::vector<uint8_t>&(const ndn_ind::Data&)>;
 
 struct SigMgr {
     const SigType m_type;
@@ -73,12 +73,12 @@ struct SigMgr {
     static constexpr SigType stNULL = 10;
 
     SigMgr(SigType typ, SigInfo&& si = {}) : m_type{typ}, m_sigInfo{std::move(si)} {}
-    bool sign(ndn::Data& d) { return sign(d, m_sigInfo, m_signingKey); };
-    bool sign(ndn::Data& d, const SigInfo& si) { return sign(d, si, m_signingKey); }
-    virtual bool sign(ndn::Data&, const SigInfo&, const keyVal&) { return false; };
-    virtual bool validate(const ndn::Data&) { return false; };
-    virtual bool validate(const ndn::Data&, const dct_Cert&) { return false; };
-    virtual bool validateDecrypt(ndn::Data& d) { return validate(d); };
+    bool sign(ndn_ind::Data& d) { return sign(d, m_sigInfo, m_signingKey); };
+    bool sign(ndn_ind::Data& d, const SigInfo& si) { return sign(d, si, m_signingKey); }
+    virtual bool sign(ndn_ind::Data&, const SigInfo&, const keyVal&) { return false; };
+    virtual bool validate(const ndn_ind::Data&) { return false; };
+    virtual bool validate(const ndn_ind::Data&, const dct_Cert&) { return false; };
+    virtual bool validateDecrypt(ndn_ind::Data& d) { return validate(d); };
     virtual void addKey(const keyVal&, uint64_t = 0) {};
     virtual void updateSigningKey(const keyVal&, const dct_Cert&) {};
     virtual bool needsKey() const noexcept { return 1; };
@@ -86,7 +86,7 @@ struct SigMgr {
     // if validate requires public keys of publishers, m_keyCb returns by keylocator
     void setKeyCb(KeyCb&& kcb) { m_keyCb = std::move(kcb);}
 
-    void validate(ndn::Data& d, const ValidDataCb& vCB, const FailedDataCb& fCB) {
+    void validate(ndn_ind::Data& d, const ValidDataCb& vCB, const FailedDataCb& fCB) {
         validate(d) ? vCB(d) : fCB(d, "signature error");
     }
 
@@ -94,8 +94,8 @@ struct SigMgr {
     SigInfo getSigInfo() const noexcept { return m_sigInfo; }
 
     // sign() helper method
-    auto setupSignature(ndn::Data& data, const SigInfo& si) const {
-        auto sigInfo = ndn::GenericSignature();
+    auto setupSignature(ndn_ind::Data& data, const SigInfo& si) const {
+        auto sigInfo = ndn_ind::GenericSignature();
         sigInfo.setSignatureInfoEncoding(si);
         data.setSignature(sigInfo);
         return data.wireEncode();

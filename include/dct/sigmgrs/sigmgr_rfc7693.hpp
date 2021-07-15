@@ -54,7 +54,7 @@ struct SigMgrRFC7693 final : SigMgr {
     SigMgrRFC7693() : SigMgr(stRFC7693, {0x16, 0x03, 0x1b, 0x01, stRFC7693}) {
         if (sodium_init() == -1) exit(EXIT_FAILURE);
     }
-    bool sign(ndn::Data& data, const SigInfo&, const keyVal&) override final {
+    bool sign(ndn_ind::Data& data, const SigInfo&, const keyVal&) override final {
         //set up the Signature field then get the Signed Portion of Data from wire format
         auto dataWF = setupSignature(data, m_sigInfo);;
         // get the RFC7693 hash
@@ -66,10 +66,10 @@ struct SigMgrRFC7693 final : SigMgr {
         return true;
     }
     /*
-     * ndn::validator has a complex pattern of handing off to ValidatorState, etc
+     * ndn_ind::validator has a complex pattern of handing off to ValidatorState, etc
      * Here just return true if success, false if failure (maybe should log the reason)
      */
-     bool validate(const ndn::Data& data) override final {
+     bool validate(const ndn_ind::Data& data) override final {
         //get the Signed Portion of Data from wire format
         auto dataWF = data.wireEncode();
         //get its RFC7693 hash
@@ -90,7 +90,7 @@ struct SigMgrRFC7693 final : SigMgr {
         }
         return true;
     }
-    bool validate(const ndn::Data& data, const dct_Cert&) override final { return validate(data); }
+    bool validate(const ndn_ind::Data& data, const dct_Cert&) override final { return validate(data); }
 
     bool needsKey() const noexcept override final { return 0; };
 };

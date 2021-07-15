@@ -96,7 +96,7 @@ struct SigMgrAEAD final : SigMgr {
         m_decryptIndex = (keyListSize() > 1) ? 1 : 0;
     }
 
-    bool sign(ndn::Data& data, const SigInfo&, const keyVal&) override final {
+    bool sign(ndn_ind::Data& data, const SigInfo&, const keyVal&) override final {
         if(!keyListSize()) return false;    //can't sign without a key
         ///set the Signature field (empty Signature Value - TLV 0x17 and 0x00)
         auto dataWF = setupSignature(data, m_sigInfo);
@@ -139,7 +139,7 @@ struct SigMgrAEAD final : SigMgr {
     /*
      * returns true if success, false if failure
      */
-    bool validateDecrypt(ndn::Data& data) override final {
+    bool validateDecrypt(ndn_ind::Data& data) override final {
         //can't decrypt without a key
         if(!keyListSize()) return false;
 

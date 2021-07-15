@@ -65,10 +65,10 @@ struct tlvParser {
         m_off = 0;
     }
 
-    tlvParser(const ndn::Data& d) : tlvParser(Blk(d.wireEncode().buf(), d.wireEncode().size()), 1) {
+    tlvParser(const ndn_ind::Data& d) : tlvParser(Blk(d.wireEncode().buf(), d.wireEncode().size()), 1) {
         // check that size agrees with encoded tlv length (this will leave the offset at first content byte)
         auto len = blkLen();
-        if (len + m_off != size()) throw runtime_error(format("ndn::Data size inconsistent {} {} {}", len, m_off, size()));
+        if (len + m_off != size()) throw runtime_error(format("ndn_ind::Data size inconsistent {} {} {}", len, m_off, size()));
     }
 
     auto nextByte() {

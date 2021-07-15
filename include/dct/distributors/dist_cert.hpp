@@ -51,7 +51,7 @@ using connectedCb = std::function<void(bool)>;
 
 struct DistCert
 {    
-    ndn::Name m_pubPrefix;  //prefix for subscribeTo()
+    ndn_ind::Name m_pubPrefix;  //prefix for subscribeTo()
     SigMgrAny m_syncSigMgr{sigMgrByType("RFC7693")}; // to sign/validate SyncData packets
     SigMgrAny m_certSigMgr{sigMgrByType("NULL")};   // to sign/validate Publications
     syncps::SyncPubsub m_sync;
@@ -109,11 +109,11 @@ struct DistCert
     void initialPub(certPub&& c) {
         _LOG_INFO("initialPub " << c.getName());
         if (! m_havePeer) {
-            m_initialPubs.emplace(std::hash<ndn::Data>{}(c));
+            m_initialPubs.emplace(std::hash<ndn_ind::Data>{}(c));
             m_sync.publish(std::move(c),
-                    [this](const ndn::Data& d, bool acked) {
+                    [this](const ndn_ind::Data& d, bool acked) {
                         _LOG_INFO("wasDelivered: " << acked << " " << d.getName().toUri());
-                        auto item = std::hash<ndn::Data>{}(d);
+                        auto item = std::hash<ndn_ind::Data>{}(d);
                         if (m_initialPubs.contains(item)) m_initialPubs.erase(item);
                         if (! m_havePeer && (!acked || m_initialPubs.empty())) {
                             if (acked) m_havePeer = true; 

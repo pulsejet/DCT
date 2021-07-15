@@ -73,14 +73,14 @@ template<> struct std::hash<thumbPrint> {
     }
 };
 
-using certName = ndn::Name;
+using certName = ndn_ind::Name;
 
-struct dctCert : ndn::Data {
+struct dctCert : ndn_ind::Data {
     // dctCert is a certificate that has contraints on its key locator (which are checked at
-    // sign/validate time). dctCert is derived from ndn::Data
+    // sign/validate time). dctCert is derived from ndn_ind::Data
 
-    dctCert(const ndn::Data& p) { *this = reinterpret_cast<const dctCert&>(p); }
-    dctCert(ndn::Data&& p) { *this = std::move(reinterpret_cast<dctCert&&>(p)); }
+    dctCert(const ndn_ind::Data& p) { *this = reinterpret_cast<const dctCert&>(p); }
+    dctCert(ndn_ind::Data&& p) { *this = std::move(reinterpret_cast<dctCert&&>(p)); }
 
     // construct a dctCert with the given name. The name will be suffixed with the
     // 4 required NDN components (KEY/<kid>/<creator>/<creationTime>), have content type
@@ -100,7 +100,7 @@ struct dctCert : ndn::Data {
         /* Set Validity Period to 1-year
          * 0xFD Validity Period 0xFE NotBefore 0xFF Not After
          * (ValidityPeriod(now, now + std::chrono::hours(1 * 365 * 24)));
-         * notBefore  number of milliseconds since 1970 ndn::MillisecondsSince1970
+         * notBefore  number of milliseconds since 1970 ndn_ind::MillisecondsSince1970
          * For some reason, wireEncode() doesn't like the ValidityPeriod in the
          * GenericSignature but if don't add its length in, it passes through okay.
          * (Have to insert 0xFD 0x00 before anything larger than 0xFC)
@@ -143,13 +143,13 @@ struct dctCert : ndn::Data {
     // the thumbprint is always a 32 byte hash so its KeyLocator block has a fixed format preamble
     static constexpr std::array<uint8_t,4> kloc_preamble{ 28, 34, 29, 32 };
 
-    static inline thumbPrint computeThumbPrint(const ndn::Data& cert) {
+    static inline thumbPrint computeThumbPrint(const ndn_ind::Data& cert) {
         thumbPrint tp;
         auto certWF = cert.wireEncode();
         crypto_hash_sha256(tp.data(), certWF.buf(), certWF.size());
         return tp;
     }
-    static inline const thumbPrint& getKeyLoc(const ndn::Data& data) {
+    static inline const thumbPrint& getKeyLoc(const ndn_ind::Data& data) {
         // find the SigInfo (tlv 22) block of 'data' then get its key locator (tlv 28)
         auto si = tlvParser(data).findBlk(22).findBlk(28);
         if (! si.starts_with(kloc_preamble, 0)) throw runtime_error("KeyLocator isn't a DCT thumbprint");
@@ -164,7 +164,7 @@ struct dctCert : ndn::Data {
     thumbPrint computeThumbPrint() const { return computeThumbPrint(*this); }
 
     // return the 'signature type' (tlv 27) byte of 'data'
-    static inline auto getSigType(const ndn::Data& data) {
+    static inline auto getSigType(const ndn_ind::Data& data) {
         // find the SigInfo (tlv 22) block of 'data' then its sigType (tlv 27) block
         auto st = tlvParser(data).findBlk(22).findBlk(27);
         if (st.size() != 3) throw runtime_error("malformed Data: multi-byte signature type");
@@ -191,19 +191,19 @@ template<> struct std::equal_to<dctCert> {
 };
 
 //XXX these don't belong here but need to be somewhere and aren't in NDN libs
-template<> struct std::hash<ndn::Data> {
-    size_t operator()(const ndn::Data& c) const noexcept {
+template<> struct std::hash<ndn_ind::Data> {
+    size_t operator()(const ndn_ind::Data& c) const noexcept {
         const auto& e = *c.wireEncode();
         return std::hash<std::string_view>{}({(const char*)e.data(), e.size()});
     }
 };
-template<> struct std::less<ndn::Data> {
-    bool operator()(const ndn::Data& a, const ndn::Data& b) const noexcept {
+template<> struct std::less<ndn_ind::Data> {
+    bool operator()(const ndn_ind::Data& a, const ndn_ind::Data& b) const noexcept {
         return std::less<decltype(*a.wireEncode())>{}(*a.wireEncode(),*b.wireEncode());
     }
 };
-template<> struct std::equal_to<ndn::Data> {
-    bool operator()(const ndn::Data& a, const ndn::Data& b) const noexcept {
+template<> struct std::equal_to<ndn_ind::Data> {
+    bool operator()(const ndn_ind::Data& a, const ndn_ind::Data& b) const noexcept {
         return std::equal_to<decltype(*a.wireEncode())>{}(*a.wireEncode(),*b.wireEncode());
     }
 };

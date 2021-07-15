@@ -68,7 +68,7 @@ int main(int argc, const char* argv[]) {
         // make an NDN data packet, set its content to be the encoded test data
         // then wire-encode the result and write it to the output file (so it
         // can be inspected with a dump utility).
-        ndn::Data data(ndn::Name("test/encoding"));
+        ndn_ind::Data data(ndn_ind::Name("test/encoding"));
         data.setContent(enc.vec());
         auto& wf = *data.wireEncode();
 
@@ -78,7 +78,7 @@ int main(int argc, const char* argv[]) {
 
         // decode the content section of the data packet constructed above and
         // validate that it's the same as the original. This tlvParser constructer
-        // wraps a parser around a 'const vector<uint8_t>&' and ndn::Data::getContent
+        // wraps a parser around a 'const vector<uint8_t>&' and ndn_ind::Data::getContent
         // returns a pointer to such a vector.
         tlvParser decode(*data.getContent());
 

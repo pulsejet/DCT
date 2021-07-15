@@ -57,7 +57,7 @@ struct pubValidator {
         }
     }
 
-    using Name = ndn::Name;
+    using Name = ndn_ind::Name;
     using Comp = Name::Component;
 
     // convert a name component to a string_view
@@ -137,7 +137,7 @@ struct SigMgrSchema final : SigMgr {
     SigMgrSchema(SigMgr& pubsm, const bSchema& bs, const tpToValidator& pv) :
         SigMgr(pubsm.type(), pubsm.getSigInfo()), pubsm_{pubsm}, bs_{bs}, pv_{pv} { }
 
-    bool validate(const ndn::Data& data) override final {
+    bool validate(const ndn_ind::Data& data) override final {
         // cryptographically validate 'data'
         if (! pubsm_.validate(data)) {
             //print("invalid sig {}\n", data.getName().toUri());

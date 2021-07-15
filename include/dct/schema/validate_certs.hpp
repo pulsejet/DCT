@@ -30,7 +30,7 @@
 
 
 // convert a name component to a string_view
-static inline auto to_sv(const ndn::Name::Component& comp) {
+static inline auto to_sv(const ndn_ind::Name::Component& comp) {
     const auto& b = *comp.getValue();
     return std::string_view((const char*)b.data(), b.size());
 }

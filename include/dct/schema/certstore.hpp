@@ -31,7 +31,7 @@
 #include "bschema.hpp"
 #include "dct_cert.hpp"
 
-using certName = ndn::Name;
+using certName = ndn_ind::Name;
 using certVec = std::vector<certName>;
 using certChain = std::vector<thumbPrint>;
 using keyVal = std::vector<uint8_t>;
@@ -62,11 +62,11 @@ struct certStore {
     auto contains(const thumbPrint& tp) const noexcept { return certs_.contains(tp); }
 
     // lookup the signing cert of 'data'
-    const dctCert& signingCert(const ndn::Data& data) const {
+    const dctCert& signingCert(const ndn_ind::Data& data) const {
         const auto& tp = dctCert::getKeyLoc(data);
         return dctCert::selfSigned(tp)? reinterpret_cast<const dctCert&>(data) : get(tp);
     }
-    const auto& operator[](const ndn::Data& data) const { return signingCert(data); }
+    const auto& operator[](const ndn_ind::Data& data) const { return signingCert(data); }
 
     const auto& key(const thumbPrint& tp) const { return key_.at(tp); }
     auto canSign(const thumbPrint& tp) const { return key_.contains(tp); }

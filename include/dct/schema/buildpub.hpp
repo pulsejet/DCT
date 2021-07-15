@@ -60,8 +60,8 @@ struct fmt::formatter<paramVal>: fmt::dynamic_formatter<> {
 };
 
 template <>
-struct fmt::formatter<ndn::Name::Component>: fmt::dynamic_formatter<> {
-    auto format(const ndn::Name::Component& v, format_context& ctx) -> decltype(ctx.out()) const {
+struct fmt::formatter<ndn_ind::Name::Component>: fmt::dynamic_formatter<> {
+    auto format(const ndn_ind::Name::Component& v, format_context& ctx) -> decltype(ctx.out()) const {
         return fmt::format_to(ctx.out(), "{}", v.getValue().toRawStr());
     }
 };
@@ -271,9 +271,8 @@ struct pubBldr {
     }
 
     // routines to build and sign pubs
-    using Name = ndn::Name;
-    using Comp = ndn::Name::Component;
- 
+    using Name = ndn_ind::Name;
+    using Comp = ndn_ind::Name::Component;
     // A paramVal is a variant type capable of holding any type that can
     // be put in a Name::Component. Params is a vector of paramVals the
     // same size as the pub template. Thus pub tag, template and Param

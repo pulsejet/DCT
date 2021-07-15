@@ -62,9 +62,9 @@ struct SigMgrAny : Variants {
     SigMgr& ref() const noexcept { return (SigMgr&)*this; }
 
     // validate 'd' using whichever sigmgr is set in the variant
-    bool validate(const ndn::Data& d) { return ref().validate(d); }
-    bool validateDecrypt(ndn::Data& d) { return ref().validateDecrypt(d); }
-    bool validate(const ndn::Data& d, const dct_Cert& c) { return ref().validate(d, c); };
+    bool validate(const ndn_ind::Data& d) { return ref().validate(d); }
+    bool validateDecrypt(ndn_ind::Data& d) { return ref().validateDecrypt(d); }
+    bool validate(const ndn_ind::Data& d, const dct_Cert& c) { return ref().validate(d, c); };
 
     bool needsKey() const noexcept { return ref().needsKey(); };
 };
