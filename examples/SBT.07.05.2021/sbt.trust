@@ -1,0 +1,85 @@
+// Sentinel Bespoke Transport trust schema
+
+// Each Zeek process has an identity (manager, worker, or proxy)
+// associated with a particular type of certificate.
+// These are signed and validatable.
+
+// trust anchor name and subdomain associated with this schema
+_network:    "poc"
+_domain:     "sbt"
+
+// SBT Publication definition
+// msgID, pCnt, mts get set in sbtShim for a particular message
+// Proxy and Manager entities are on the same box in this schema
+// Note that a particular proxy, manager, or worker can make its
+//  subscription more specific, e.g. for "control", the long hex
+//  id of the entity can be part of the subscription
+
+#sbtPub: _network/_domain/target/topic/args/_role/_Id/msgID/pCnt/mts & {
+    _Id: _roleId
+} 
+
+logsInternal: #sbtPub & { target: "logs", args: "-"} &
+{ 
+    topic:  "Broker::LOG" | "Cluster::LOG" | "LoadedScripts::LOG" | "Stats::LOG"
+} <= workerCert | proxyCert
+
+logsnetTraff: #sbtPub & { target: "logs", args: "-" } &
+{ 
+    topic:  "CaptureLoss::LOG"|"Conn::LOG"|"DNS::LOG"|"Files::LOG"|"HTTP::LOG"|"NTP::LOG"|
+                 "PacketFilter::LOG"|"Reporter::LOG"|"SSH::LOG"|"SSL::LOG"|"Weird::LOG"|"X509::LOG"
+} <= workerCert
+
+logsHost: #sbtPub & { target: "logs", args: "-"} &
+    { topic:  "Software::LOG" } <= proxyCert
+
+clusterWorker: #sbtPub & { target: "cluster" } &
+    { topic:  "worker", args: "-" } <= proxyCert | managerCert
+
+clusterManager: #sbtPub & { target: "cluster" } &
+    { topic:  "manager", args: "-"} <= workerCert
+
+clusterNodeProxy: #sbtPub & { target: "cluster" } &
+    { topic: "node", args: "proxy0" } <= workerCert
+
+// leaving args unconstrained since should be "worker<id>"
+clusterNodeWrkr: #sbtPub & { target: "cluster", topic: "node" } <= managerCert
+
+//this is placeholder for topic of one of the hex strings
+// appears that any entity can publish here but the recipient
+// would check to see if the hex id was its own.
+controlID: #sbtPub & { target: "control", args: "-"} &
+{
+    topic: "4947C1C8683F9745FECEDF7176CCDE5FB9288C00#55642"|
+                "4947C1C8683F9745FECEDF7176CCDE5FB9288C00#55545"|
+                "4947C1C8683F9745FECEDF7176CCDE5FB9288C00#55594"
+} <= roleCert
+
+// The device gets configured as a Sentinel device and installerProc
+// uses that key to make its Sentinel role key which is used to
+// sign Publications
+
+roleCert:    _network/_domain/_role/_roleId/_keyinfo
+workerCert:  roleCert & { _role: "worker" } <= sensorDevCert
+managerCert: roleCert & { _role: "manager" } <= cntrlDevCert
+proxyCert:   roleCert & { _role: "proxy" } <= cntrlDevCert
+
+sensorDevCert <= configCert <= netCert
+cntrlDevCert <= configCert <= netCert
+
+netCert:        _network/_domain/_keyinfo
+configCert:     _network/_domain/"config"/_cID/_keyinfo
+sensorDevCert:  _network/_domain/"sensorDevice"/_devID/_keyinfo
+cntrlDevCert:   _network/_domain/"cntrlDevice"/_devID/_keyinfo
+
+// schema's Publication prefix and validator type
+#pubPrefix:    _network/_domain
+#pubValidator: "EdDSA"
+
+// Prefix used at the syncps (NDN Interest/Data) level to sync
+// this collection. 
+#wirePrefix: _ndnprefix/_domain & { _ndnprefix: "localnet" } <= roleCert
+#wireValidator: "EdDSA"
+
+// The final 3 components are keyID, issuerID and version 
+_keyinfo: "KEY"/_/"dct"/_

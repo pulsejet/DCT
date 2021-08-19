@@ -2,14 +2,15 @@
 # the code *requires* C++ 20 or later
 
 INCLUDES = ../../include
-#CXXFLAGS = -g -O0 -I. -I$(INCLUDES) -Wall -Wextra -std=c++20 -I/opt/local/include
-#CXXFLAGS += -fsanitize=address,undefined
-CXXFLAGS = -g -O3 -I. -I$(INCLUDES) -Wall -Wextra -std=c++20 -I/opt/local/include
+CXXFLAGS = -g -O0 -I. -I$(INCLUDES) -Wall -Wextra -std=c++20 -I/opt/local/include
 CXXFLAGS += $(shell pkg-config --cflags libndn-ind)
+CXXFLAGS += -fsanitize=address,undefined
+# fmt uses <codecvt> which was deprecated with no replacement
+CXXFLAGS += -Wno-deprecated-declarations 
 LIBS = -L/opt/local/lib $(shell pkg-config --libs libndn-ind)
-HDRS = mbps.hpp
+HDRS = sbtShim.hpp
 DEPS = $(HDRS)
-BINS = app1 app2 app3 app2u
+BINS = sbtAdaptor
 JUNK = 
 
 # OS dependent definitions
@@ -17,29 +18,20 @@ ifeq ($(shell uname -s),Darwin)
 CXX=clang++
 # we can't fix boost warnings so suppress them
 CXXFLAGS += --system-header-prefix=boost/
+CXXFLAGS += -fsanitize=address,undefined
 LIBS += -lboost_iostreams-mt -llog4cxx -lsodium -lcrypto
 JUNK += $(addsuffix .dSYM,$(BINS))
 else
-# ubuntu packages are compiled with gcc and its sanitizer doesn't cooperate with clang's
 CXX=c++
 LIBS += -lboost_iostreams -llog4cxx -lpthread -lsodium -lcrypto
 endif
 
 #all: $(BINS)
-all: app2 app2u
+all: sbtAdaptor
 
 .PHONY: clean distclean tags
 
-app1: app1.cpp $(DEPS)
-	$(CXX) $(CXXFLAGS) -o $@ $< $(LIBS)
-
-app2: app2.cpp $(DEPS)
-	$(CXX) $(CXXFLAGS) -o $@ $< $(LIBS)
-
-app3: app3.cpp $(DEPS)
-	$(CXX) $(CXXFLAGS) -o $@ $< $(LIBS)
-
-app2u: app2u.cpp $(DEPS)
+sbtAdaptor: sbtAdaptor.cpp $(DEPS)
 	$(CXX) $(CXXFLAGS) -o $@ $< $(LIBS)
 
 clean:
