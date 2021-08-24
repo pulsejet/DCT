@@ -30,6 +30,7 @@ Vagrant.configure("2") do |config|
     cd ..
     git clone https://github.com/named-data/NFD
     cd NFD
+    git apply ../NDNpatches/cxx-register-bug.patch
     git submodule update --init
     ./waf configure
     ./waf
@@ -44,8 +45,10 @@ Vagrant.configure("2") do |config|
     sudo make install
     sudo ldconfig
     cd ..
-    git clone https://github.com/pollere/DCT
+    rm -rf DCT
+    git clone https://github.com/tylerliu/DCT-example.git DCT 
     cd DCT/
+    git checkout dev
     cd tools/
     make -j
     cd ../examples/mbps
@@ -58,12 +61,13 @@ Vagrant.configure("2") do |config|
     ../../tools/schema_cert -o mbpsDemo.schema mbpsDemo.scm mbpsDemo.root
     ../../tools/make_cert -s EdDSA -o alice.cert myNet/mbpsDemo/operator/alice mbpsDemo.root
     ../../tools/make_cert -s EdDSA -o bob.cert myNet/mbpsDemo/operator/bob mbpsDemo.root
-    ../../tools/make_cert -s EdDSA -o door.cert myNet/mbpsDemo/device/door mbpsDemo.root
-    ../../tools/make_bundle -o alice.bundle mbps1.root mbpsDemo.schema +alice.cert
-    ../../tools/make_bundle -o bob.bundle mbps1.root mbpsDemo.schema +bob.cert
-    ../../tools/make_bundle -o door.bundle mbps1.root mbpsDemo.schema +door.cert
+    ../../tools/make_cert -s EdDSA -o frontdoor.cert myNet/mbpsDemo/device/frontdoor mbpsDemo.root
+    ../../tools/make_bundle -o alice.bundle mbpsDemo.root mbpsDemo.schema +alice.cert
+    ../../tools/make_bundle -o bob.bundle mbpsDemo.root mbpsDemo.schema +bob.cert
+    ../../tools/make_bundle -o frontdoor.bundle mbpsDemo.root mbpsDemo.schema +frontdoor.cert
     cd ../../..
     ndnsec key-gen /ndn/alice
+    nfd-start || echo
   SHELL
 end
 

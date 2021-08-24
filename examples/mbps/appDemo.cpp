@@ -157,7 +157,7 @@ static void periodicPublishCommand(mbps &cm) {
 static void publishBatteryLow(mbps &cm) {
     msgArgs a;
     a.cap = capability;
-    a.topic = "event";
+    a.topic = "status";
     a.loc = myId;
     a.args = "battery_low";
 
@@ -243,6 +243,7 @@ int main(int argc, char* argv[])
     mbps cm(argv[optind]);     //Create the mbps client
     role = cm.myRole();
     myId = cm.myId();
+    printf("This node has role %s, id %s\n", role.c_str(), myId.c_str());
 
     // Connect and pass in the handler
     try {
