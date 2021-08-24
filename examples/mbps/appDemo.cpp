@@ -48,7 +48,6 @@ static constexpr bool deliveryConfirmation = true; // get per-message delivery c
 
 // handles command line
 static struct option opts[] = {
-    {"collection", required_argument, nullptr, 'c'},
     {"debug", no_argument, nullptr, 'd'},
     {"help", no_argument, nullptr, 'h'},
     {"location", required_argument, nullptr, 'l'},
@@ -63,7 +62,6 @@ static void help(const char* cname)
 {
     usage(cname);
     std::cerr << " flags:\n"
-           "  -c collection     defaults to 'time'\n"
            "  -d |--debug       enable debugging output\n"
            "  -h |--help        print help then exit\n"
            "  -l location       defaults to 'all'\n"
@@ -77,19 +75,16 @@ static std::chrono::nanoseconds pubWait = std::chrono::seconds(1);
 static int messageCount = 0;
 static int nMsgs = 20;
 static Timer timer;
-static std::string collection{"date"};
 static std::string location{"all"}; // target's location (for controllers)
 static std::string role{};          // this instance's role
 static std::string myId{};
-static std::string gatewayState{"8217397381"};       // simulated state (for gateways)
+static int64_t gatewayState{8217397381};       // simulated state (for gateways)
 
 /*
  * msgPubr passes messages to publish to the mbps client. A simple lambda
  * is used if "qos" is desired. A more complex callback (messageConfirmation)
  * is included in the app1.cpp file.
  */
-
-static void publishReading(mbps &cm);
 
 static void publishWithArgs(mbps &cm,const msgArgs &a) {
     // make a message to publish
@@ -111,25 +106,30 @@ static void publishWithArgs(mbps &cm,const msgArgs &a) {
     }
 }
 
-static void publishReading(mbps &cm) {
+static void publishReading(mbps &cm, const std::string& collection) {
     msgArgs a;
     a.cap = collection;
     a.topic = "current_reading";
     a.loc = myId;
-    a.args = gatewayState;
+    a.args = std::to_string(collection == "time" ? gatewayState : gatewayState / 86400);
+    // printf("Publish Reading in %s %s %s %s", a.cap.c_str(), a.topic.c_str(), a.loc.c_str(), a.args.c_str());
 
     publishWithArgs(cm, a);
 }
 
 static void publishCommand(mbps &cm) {
     msgArgs a;
-    a.cap = collection;
-    if (role == "controller")
+    const char* locs[3] = {"all", "Texas", "California"};
+    a.cap = (std::rand() & 1) ? "date" : "time";
+    if (role == "controller") {
         a.topic = (std::rand() & 1) ? "set_value" : "request_reading";
-    else if (role == "viewer")
+        a.loc = locs[std::rand() & 2];
+    }
+    else if (role == "viewer") {
         a.topic = "request_reading";
-    a.loc = location;
-    a.args = a.topic == "set_value" ? std::to_string(std::rand()) : ""; // randomly toggle requested state
+        a.loc = a.cap == "date" ? locs[std::rand() & 2] : "California";
+    }
+    a.args = a.topic == "set_value" ? std::to_string(a.cap != "date" ? std::rand() : std::rand() / 86400) : ""; // randomly toggle requested state
 
     publishWithArgs(cm, a);
 }
@@ -187,8 +187,8 @@ static void msgRecv(mbps &cm, std::vector<uint8_t>& msgPayload, const msgArgs& a
     // gateways set their 'state' from the incoming 'arg' value then immediately reply
     if (role == "gateway") {
         if (a.topic == "set_value")
-            gatewayState = a.args;
-        publishReading(cm);
+            gatewayState = a.cap == "time" ? std::stoi(a.args) : std::stoi(a.args) * 86400 + gatewayState % 86400;
+        publishReading(cm, a.cap);
     }
 }
 
@@ -207,11 +207,8 @@ int main(int argc, char* argv[])
     INIT_LOGGERS();
     // parse input line
     for (int c;
-        (c = getopt_long(argc, argv, ":c:dhl:n:w:", opts, nullptr)) != -1;) {
+        (c = getopt_long(argc, argv, ":dhl:n:w:", opts, nullptr)) != -1;) {
         switch (c) {
-                case 'c':
-                    collection = optarg;
-                    break;
                 case 'd':
                     ++debug;
                     break;
@@ -244,12 +241,19 @@ int main(int argc, char* argv[])
         cm.connect(    /* main task for this entity */
             [&cm]() {
                 if (role == "controller" || role == "viewer") {
-                    cm.subscribe(collection + "/current_reading", msgRecv);  // single callback for all messages
+                    cm.subscribe("/time/current_reading", msgRecv);  // single callback for all messages
+                    cm.subscribe("/date/current_reading", msgRecv);  // single callback for all messages
                     periodicPublishCommand(cm);            // send initial message to kick things off
                 } else {
                     //here gateways just subscribe to command topic
-                    cm.subscribe(collection + "/set_value/all", msgRecv);     // msgs to all instances
-                    cm.subscribe(collection + "/request_reading/all", msgRecv);     // msgs to all instances
+                    cm.subscribe("/time/set_value/all", msgRecv);     // msgs to all instances
+                    cm.subscribe("/date/set_value/all", msgRecv);     // msgs to all instances
+                    cm.subscribe("/time/request_reading/all", msgRecv);     // msgs to all instances
+                    cm.subscribe("/date/request_reading/all", msgRecv);     // msgs to all instances
+                    cm.subscribe("/time/set_value/" + myId, msgRecv);     // msgs to this instance
+                    cm.subscribe("/date/set_value/" + myId, msgRecv);     // msgs to this instance
+                    cm.subscribe("/time/request_reading/" + myId, msgRecv);     // msgs to this instance
+                    cm.subscribe("/date/request_reading/" + myId, msgRecv);     // msgs to this instance
                 }
             });
     } catch (const std::exception& e) {
