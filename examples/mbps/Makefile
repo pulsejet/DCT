@@ -39,7 +39,7 @@ app2: app2.cpp $(DEPS)
 app3: app3.cpp $(DEPS)
 	$(CXX) $(CXXFLAGS) -o $@ $< $(LIBS)
 
-app2u: app2u.cpp $(DEPS)
+appDemo: appDemo.cpp $(DEPS)
 	$(CXX) $(CXXFLAGS) -o $@ $< $(LIBS)
 
 clean:
