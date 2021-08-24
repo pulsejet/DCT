@@ -252,6 +252,9 @@ int main(int argc, char* argv[])
                 if (role == "controller") {
                     cm.subscribe(msgRecv);  // single callback for all messages
                     periodicPublishCommand(cm);            // send initial message to kick things off
+                } else if (role == "viewer") {
+                    cm.subscribe(msgRecv);  // single callback for all messages
+                    periodicPublishCommand(cm);            // send initial message to kick things off
                 } else {
                     //here gateways just subscribe to command topic
                     cm.subscribe(capability + "/set_value/" + myId, msgRecv); // msgs to this instance
