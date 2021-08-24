@@ -254,8 +254,8 @@ int main(int argc, char* argv[])
                     periodicPublishCommand(cm);            // send initial message to kick things off
                 } else {
                     //here gateways just subscribe to command topic
-                    cm.subscribe(capability + "/command/" + myId, msgRecv); // msgs to this instance
-                    cm.subscribe(capability + "/command/all", msgRecv);     // msgs to all instances
+                    cm.subscribe(capability + "/set_value/" + myId, msgRecv); // msgs to this instance
+                    cm.subscribe(capability + "/set_value/all", msgRecv);     // msgs to all instances
                 }
             });
     } catch (const std::exception& e) {

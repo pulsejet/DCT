@@ -25,7 +25,7 @@ currentReading: #mbps2Pub & { target: "lock", topic: "current_reading"
 
 setValue: #mbps2Pub & { target: "lock", topic: "set_value" } &
     { trgtLoc: "all" | "frontdoor" | "gate" | "backdoor" } &
-    { topicArgs:  "lock"|"unlock"|"report" } <= controllerCert
+    { topicArgs:  "lock"|"unlock"| "report" } <= controllerCert
 
 roleCert:    _network/_domain/_role/_roleID/_keyinfo <= netCert
 controllerCert:  roleCert & { _role: "controller" }
