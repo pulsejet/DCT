@@ -115,11 +115,11 @@ static void msgPubr(mbps &cm) {
     msgArgs a;
     a.cap = capability;
     if(role == "controller") {
-        a.topic = "command";
+        a.topic = "set_value";
         a.loc = location;
         a.args = (std::rand() & 1)? "unlock" : "lock"; // randomly toggle requested state
     } else {
-        a.topic = "event";
+        a.topic = "current_reading";
         a.loc = myId;
         a.args = gatewayState;
     }
@@ -130,7 +130,7 @@ static void msgPubr(mbps &cm) {
 static void publishCommand(mbps &cm) {
     msgArgs a;
     a.cap = capability;
-    a.topic = "command";
+    a.topic = "set_value";
     a.loc = location;
     a.args = (std::rand() & 1)? "unlock" : "lock"; // randomly toggle requested state
 
@@ -157,7 +157,7 @@ static void periodicPublishCommand(mbps &cm) {
 static void publishBatteryLow(mbps &cm) {
     msgArgs a;
     a.cap = capability;
-    a.topic = "status";
+    a.topic = "current_reading";
     a.loc = myId;
     a.args = "battery_low";
 

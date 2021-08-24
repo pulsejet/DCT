@@ -18,12 +18,12 @@ _domain:     "mbpsDemo"
     _origin:   sysId()
 }
 
-lockReport: #mbps2Pub & { target: "lock", topic: "event"|"status"
+currentReading: #mbps2Pub & { target: "lock", topic: "current_reading"
     trgtLoc: _roleID
     topicArgs: "locked" | "unlocked" | "battery_low"
 } <= gatewayCert 
 
-lockCommand: #mbps2Pub & { target: "lock", topic: "command" } &
+setValue: #mbps2Pub & { target: "lock", topic: "set_value" } &
     { trgtLoc: "all" | "frontdoor" | "gate" | "backdoor" } &
     { topicArgs:  "lock"|"unlock"|"report" } <= controllerCert
 
