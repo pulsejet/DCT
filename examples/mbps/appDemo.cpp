@@ -8,10 +8,10 @@
  * desired (here, confirmation that the message has been published).
  *
  * app2 models an asymmetric, request/response style protocol between controlling
- * agent(s) ("operator" role in the schema) and controlled agent(s) ("device" role
- * in the schema). If the identity bundle gives the app an 'operator' role, it
+ * agent(s) ("controller" role in the schema) and controlled agent(s) ("gateway" role
+ * in the schema). If the identity bundle gives the app an 'controller' role, it
  * periodically publishes a message and prints all the responses it receives.
- * If the app is given a 'device' role, it waits for a message then sets its
+ * If the app is given a 'gateway' role, it waits for a message then sets its
  * simulated state based on the message an announces its current state.
  *
  * Copyright (C) 2020 Pollere, Inc
@@ -78,10 +78,10 @@ static int messageCount = 0;
 static int nMsgs = 20;
 static Timer timer;
 static std::string capability{"lock"};
-static std::string location{"all"}; // target's location (for operators)
+static std::string location{"all"}; // target's location (for controllers)
 static std::string role{};          // this instance's role
 static std::string myId{};
-static std::string deviceState{"unlocked"};       // simulated state (for devices)
+static std::string gatewayState{"unlocked"};       // simulated state (for gateways)
 
 /*
  * msgPubr passes messages to publish to the mbps client. A simple lambda
@@ -114,14 +114,14 @@ static void publishWithArgs(mbps &cm,const msgArgs &a) {
 static void msgPubr(mbps &cm) {
     msgArgs a;
     a.cap = capability;
-    if(role == "operator") {
+    if(role == "controller") {
         a.topic = "command";
         a.loc = location;
         a.args = (std::rand() & 1)? "unlock" : "lock"; // randomly toggle requested state
     } else {
         a.topic = "event";
         a.loc = myId;
-        a.args = deviceState;
+        a.args = gatewayState;
     }
 
     publishWithArgs(cm, a);
@@ -140,8 +140,8 @@ static void publishCommand(mbps &cm) {
 static void periodicPublishCommand(mbps &cm) {
     publishCommand(cm);
 
-    // operators send periodic messages, devices respond to incoming msgs
-    if (role == "operator" && nMsgs) {
+    // controllers send periodic messages, gateways respond to incoming msgs
+    if (role == "controller" && nMsgs) {
         if (messageCount < nMsgs) {
             timer = cm.schedule(pubWait + std::chrono::milliseconds(rand() & 0x1ff), [&cm](){ periodicPublishCommand(cm); });
         } else {
@@ -187,10 +187,10 @@ static void msgRecv(mbps &cm, std::vector<uint8_t>& msgPayload, const msgArgs& a
 
     // further action can be conditional upon msgArgs and msgPayload
 
-    // devices set their 'state' from the incoming 'arg' value then immediately reply
-    if (role == "device") {
-        bool changed = deviceState != (a.args == "lock" ? "locked" : "unlocked");
-        deviceState = a.args == "lock" ? "locked" : "unlocked";
+    // gateways set their 'state' from the incoming 'arg' value then immediately reply
+    if (role == "gateway") {
+        bool changed = gatewayState != (a.args == "lock" ? "locked" : "unlocked");
+        gatewayState = a.args == "lock" ? "locked" : "unlocked";
         if (changed) msgPubr(cm);
         if (messageCount > 5) {
             publishBatteryLow(cm);
@@ -249,11 +249,11 @@ int main(int argc, char* argv[])
     try {
         cm.connect(    /* main task for this entity */
             [&cm]() {
-                if (role == "operator") {
+                if (role == "controller") {
                     cm.subscribe(msgRecv);  // single callback for all messages
                     periodicPublishCommand(cm);            // send initial message to kick things off
                 } else {
-                    //here devices just subscribe to command topic
+                    //here gateways just subscribe to command topic
                     cm.subscribe(capability + "/command/" + myId, msgRecv); // msgs to this instance
                     cm.subscribe(capability + "/command/all", msgRecv);     // msgs to all instances
                 }
