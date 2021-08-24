@@ -98,12 +98,12 @@ static void publishWithArgs(mbps &cm,const msgArgs &a) {
     messageCount ++; // increase message count
 
     if constexpr (deliveryConfirmation) {
-        cm.publish(toSend, a, [a,ts=std::chrono::system_clock::now()](bool delivered, uint32_t /*mId*/) {
+        cm.publish(toSend, a, [a,ts=std::chrono::system_clock::now(), mCnt=messageCount - 1](bool delivered, uint32_t /*mId*/) {
                     using ticks = std::chrono::duration<double,std::ratio<1,1000000>>;
                     auto now = std::chrono::system_clock::now();
                     auto dt = ticks(now - ts).count() / 1000.;
                     print("{:%M:%S} {}:{}-{} #{} published and {} +{:.3} mS: {} {}: {} {}\n",
-                            ticks(ts.time_since_epoch()), role, myId, myPID, messageCount,
+                            ticks(ts.time_since_epoch()), role, myId, myPID, mCnt,
                             delivered? "confirmed":"timed out", dt, a.cap, a.topic, a.loc, a.args); 
         });
     } else {
