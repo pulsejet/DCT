@@ -22,11 +22,20 @@ currentReading: #mbps2Pub & { target: "date" | "time", topic: "current_reading"
     trgtLoc: _roleID
 } <= gatewayCert 
 
-setValue: #mbps2Pub & { target: "date" | "time", topic: "set_value" } &
-    { trgtLoc: "all" | "California" | "Texas" | "Pennsylvania" } <= controllerCert
+setValue: #mbps2Pub & { target: "time", topic: "set_value" } &
+    { trgtLoc: "all" | "California" | "Texas" } <= controllerCert
 
-requestReading: #mbps2Pub & { target: "date" | "time", topic: "request_reading" } &
-    { trgtLoc: "all" | "California" | "Texas" | "Pennsylvania" } <= viewerCert | controllerCert
+setValueDate: #mbps2Pub & { target: "date", topic: "set_value" } &
+    { trgtLoc: "all" | "California" | "Texas" } <= viewerCert | controllerCert
+
+requestReadingDate: #mbps2Pub & { target: "date", topic: "request_reading" } &
+    { trgtLoc: "all" | "California" | "Texas" } <= viewerCert | controllerCert
+
+requestReadingTimeTx: #mbps2Pub & { target: "time", topic: "request_reading" } &
+    { trgtLoc: "all" | "Texas" } <= controllerCert
+
+requestReadingTimeCa: #mbps2Pub & { target: "time", topic: "request_reading" } &
+    { trgtLoc: "California" } <= viewerCert | controllerCert
 
 roleCert:    _network/_domain/_role/_roleID/_keyinfo <= netCert
 controllerCert:  roleCert & { _role: "controller" }
