@@ -23,10 +23,10 @@ currentReading: #mbps2Pub & { target: "lock", topic: "current_reading"
 } <= gatewayCert 
 
 setValue: #mbps2Pub & { target: "lock", topic: "set_value" } &
-    { trgtLoc: "all" | "frontdoor" | "gate" | "backdoor" } <= controllerCert
+    { trgtLoc: "all" | "California" | "Texas" | "Pennsylvania" } <= controllerCert
 
 requestReading: #mbps2Pub & { target: "lock", topic: "request_reading" } &
-    { trgtLoc: "all" | "frontdoor" | "gate" | "backdoor" } <= viewerCert | controllerCert
+    { trgtLoc: "all" | "California" | "Texas" | "Pennsylvania" } <= viewerCert | controllerCert
 
 roleCert:    _network/_domain/_role/_roleID/_keyinfo <= netCert
 controllerCert:  roleCert & { _role: "controller" }
