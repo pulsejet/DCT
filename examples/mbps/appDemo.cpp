@@ -130,7 +130,10 @@ static void msgPubr(mbps &cm) {
 static void publishCommand(mbps &cm) {
     msgArgs a;
     a.cap = capability;
-    a.topic = "set_value";
+    if (role == "controller")
+        a.topic = "set_value";
+    else if (role == "viewer")
+        a.topic = "request_reading";
     a.loc = location;
     a.args = (std::rand() & 1)? "unlock" : "lock"; // randomly toggle requested state
 
@@ -142,6 +145,18 @@ static void periodicPublishCommand(mbps &cm) {
 
     // controllers send periodic messages, gateways respond to incoming msgs
     if (role == "controller" && nMsgs) {
+        if (messageCount < nMsgs) {
+            timer = cm.schedule(pubWait + std::chrono::milliseconds(rand() & 0x1ff), [&cm](){ periodicPublishCommand(cm); });
+        } else {
+            timer = cm.schedule(2*pubWait, [](){
+                    print("{}:{}-{} published {} messages and exits\n", role, myId, myPID, messageCount);
+                    exit(0);
+            });
+            return;
+        }
+    }
+
+    if (role == "viewer" && nMsgs) {
         if (messageCount < nMsgs) {
             timer = cm.schedule(pubWait + std::chrono::milliseconds(rand() & 0x1ff), [&cm](){ periodicPublishCommand(cm); });
         } else {
