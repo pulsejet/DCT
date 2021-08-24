@@ -1,13 +1,9 @@
-    ./schemaCompile -o mbps1.scm mbps1.trust
-    ../../tools/make_cert -s EdDSA -o mbps1.root myNet/mbps1
-    ../../tools/schema_cert -o mbps1.schema mbps1.scm mbps1.root
-
-    ../../tools/make_cert -s EdDSA -o alice.cert myNet/mbps1/operator/alice mbps1.root
-    ../../tools/make_cert -s EdDSA -o bob.cert myNet/mbps1/operator/bob mbps1.root
-    ../../tools/make_cert -s EdDSA -o cathy.cert myNet/mbps1/operator/cathy mbps1.root
-    ../../tools/make_cert -s EdDSA -o frontdoor.cert myNet/mbps1/device/frontdoor mbps1.root
-    
-    ../../tools/make_bundle -o alice.bundle mbps1.root mbps1.schema +alice.cert
-    ../../tools/make_bundle -o bob.bundle mbps1.root mbps1.schema +bob.cert
-    ../../tools/make_bundle -o cathy.bundle mbps1.root mbps1.schema +cathy.cert
-    ../../tools/make_bundle -o frontdoor.bundle mbps1.root mbps1.schema +frontdoor.cert
+    ./schemaCompile -o mbpsDemo.scm mbpsDemo.trust
+    ../../tools/make_cert -s EdDSA -o mbpsDemo.root myNet/mbpsDemo
+    ../../tools/schema_cert -o mbpsDemo.schema mbpsDemo.scm mbpsDemo.root
+    ../../tools/make_cert -s EdDSA -o alice.cert myNet/mbpsDemo/controller/alice mbpsDemo.root
+    ../../tools/make_cert -s EdDSA -o bob.cert myNet/mbpsDemo/controller/bob mbpsDemo.root
+    ../../tools/make_cert -s EdDSA -o frontdoor.cert myNet/mbpsDemo/gateway/frontdoor mbpsDemo.root
+    ../../tools/make_bundle -o alice.bundle mbpsDemo.root mbpsDemo.schema +alice.cert
+    ../../tools/make_bundle -o bob.bundle mbpsDemo.root mbpsDemo.schema +bob.cert
+    ../../tools/make_bundle -o frontdoor.bundle mbpsDemo.root mbpsDemo.schema +frontdoor.cert
