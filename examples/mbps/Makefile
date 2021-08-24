@@ -26,7 +26,7 @@ LIBS += -lboost_iostreams -llog4cxx -lpthread -lsodium -lcrypto
 endif
 
 #all: $(BINS)
-all: app2 app2u
+all: app2 appDemo
 
 .PHONY: clean distclean tags
 
