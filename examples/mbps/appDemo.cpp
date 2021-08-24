@@ -131,7 +131,7 @@ static void publishCommand(mbps &cm) {
     msgArgs a;
     a.cap = capability;
     if (role == "controller")
-        a.topic = "set_value";
+        a.topic = (std::rand() & 1) ? "set_value" : "request_reading";
     else if (role == "viewer")
         a.topic = "request_reading";
     a.loc = location;
@@ -200,13 +200,11 @@ static void msgRecv(mbps &cm, std::vector<uint8_t>& msgPayload, const msgArgs& a
             ticks(now.time_since_epoch()), role, myId, myPID, dt, a.cap, a.topic, a.loc, a.args, 
             std::string(msgPayload.begin(), msgPayload.end()));
 
-    // further action can be conditional upon msgArgs and msgPayload
-
     // gateways set their 'state' from the incoming 'arg' value then immediately reply
     if (role == "gateway") {
-        bool changed = gatewayState != (a.args == "lock" ? "locked" : "unlocked");
-        gatewayState = a.args == "lock" ? "locked" : "unlocked";
-        if (changed) msgPubr(cm);
+        if (a.topic == "set_value")
+            gatewayState = a.args == "lock" ? "locked" : "unlocked";
+        msgPubr(cm);
         if (messageCount > 5) {
             publishBatteryLow(cm);
         }
@@ -270,6 +268,7 @@ int main(int argc, char* argv[])
                 } else {
                     //here gateways just subscribe to command topic
                     cm.subscribe(capability + "/set_value/all", msgRecv);     // msgs to all instances
+                    cm.subscribe(capability + "/request_reading/all", msgRecv);     // msgs to all instances
                 }
             });
     } catch (const std::exception& e) {
