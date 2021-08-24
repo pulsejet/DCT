@@ -20,16 +20,13 @@ _domain:     "mbpsDemo"
 
 currentReading: #mbps2Pub & { target: "lock", topic: "current_reading"
     trgtLoc: _roleID
-    topicArgs: "locked" | "unlocked" | "battery_low"
 } <= gatewayCert 
 
 setValue: #mbps2Pub & { target: "lock", topic: "set_value" } &
-    { trgtLoc: "all" | "frontdoor" | "gate" | "backdoor" } &
-    { topicArgs:  "lock"|"unlock"| "report" } <= controllerCert
+    { trgtLoc: "all" | "frontdoor" | "gate" | "backdoor" } <= controllerCert
 
 requestReading: #mbps2Pub & { target: "lock", topic: "request_reading" } &
-    { trgtLoc: "all" | "frontdoor" | "gate" | "backdoor" } &
-    { topicArgs:  "lock"|"unlock"| "report" } <= viewerCert | controllerCert
+    { trgtLoc: "all" | "frontdoor" | "gate" | "backdoor" } <= viewerCert | controllerCert
 
 roleCert:    _network/_domain/_role/_roleID/_keyinfo <= netCert
 controllerCert:  roleCert & { _role: "controller" }

@@ -264,15 +264,11 @@ int main(int argc, char* argv[])
     try {
         cm.connect(    /* main task for this entity */
             [&cm]() {
-                if (role == "controller") {
-                    cm.subscribe(msgRecv);  // single callback for all messages
-                    periodicPublishCommand(cm);            // send initial message to kick things off
-                } else if (role == "viewer") {
-                    cm.subscribe(msgRecv);  // single callback for all messages
+                if (role == "controller" || role == "viewer") {
+                    cm.subscribe(capability + "/current_reading", msgRecv);  // single callback for all messages
                     periodicPublishCommand(cm);            // send initial message to kick things off
                 } else {
                     //here gateways just subscribe to command topic
-                    cm.subscribe(capability + "/set_value/" + myId, msgRecv); // msgs to this instance
                     cm.subscribe(capability + "/set_value/all", msgRecv);     // msgs to all instances
                 }
             });
