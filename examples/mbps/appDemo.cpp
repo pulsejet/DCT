@@ -63,7 +63,7 @@ static void help(const char* cname)
 {
     usage(cname);
     std::cerr << " flags:\n"
-           "  -c capability     defaults to 'lock'\n"
+           "  -c capability     defaults to 'time'\n"
            "  -d |--debug       enable debugging output\n"
            "  -h |--help        print help then exit\n"
            "  -l location       defaults to 'all'\n"
@@ -77,7 +77,7 @@ static std::chrono::nanoseconds pubWait = std::chrono::seconds(1);
 static int messageCount = 0;
 static int nMsgs = 20;
 static Timer timer;
-static std::string capability{"lock"};
+static std::string capability{"date"};
 static std::string location{"all"}; // target's location (for controllers)
 static std::string role{};          // this instance's role
 static std::string myId{};

@@ -18,14 +18,14 @@ _domain:     "mbpsDemo"
     _origin:   sysId()
 }
 
-currentReading: #mbps2Pub & { target: "lock", topic: "current_reading"
+currentReading: #mbps2Pub & { target: "date" | "time", topic: "current_reading"
     trgtLoc: _roleID
 } <= gatewayCert 
 
-setValue: #mbps2Pub & { target: "lock", topic: "set_value" } &
+setValue: #mbps2Pub & { target: "date" | "time", topic: "set_value" } &
     { trgtLoc: "all" | "California" | "Texas" | "Pennsylvania" } <= controllerCert
 
-requestReading: #mbps2Pub & { target: "lock", topic: "request_reading" } &
+requestReading: #mbps2Pub & { target: "date" | "time", topic: "request_reading" } &
     { trgtLoc: "all" | "California" | "Texas" | "Pennsylvania" } <= viewerCert | controllerCert
 
 roleCert:    _network/_domain/_role/_roleID/_keyinfo <= netCert
