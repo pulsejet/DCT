@@ -9,3 +9,10 @@
     ../../tools/make_bundle -o bob.bundle mbpsDemo.root mbpsDemo.schema +bob.cert
     ../../tools/make_bundle -o California.bundle mbpsDemo.root mbpsDemo.schema +California.cert
     ../../tools/make_bundle -o Texas.bundle mbpsDemo.root mbpsDemo.schema +Texas.cert
+
+    ./schemaCompile -o mbpsDemoBad.scm mbpsDemoBad.trust
+    ../../tools/schema_cert -o mbpsDemoBad.schema mbpsDemoBad.scm mbpsDemo.root
+    ../../tools/make_bundle -o aliceBad.bundle mbpsDemo.root mbpsDemoBad.schema +alice.cert
+    ../../tools/make_bundle -o bobBad.bundle mbpsDemo.root mbpsDemoBad.schema +bob.cert
+    ../../tools/make_bundle -o CaliforniaBad.bundle mbpsDemo.root mbpsDemoBad.schema +California.cert
+    ../../tools/make_bundle -o TexasBad.bundle mbpsDemo.root mbpsDemoBad.schema +Texas.cert
