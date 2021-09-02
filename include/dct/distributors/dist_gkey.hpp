@@ -59,7 +59,12 @@ using Timer = ndn_ind::scheduler::ScopedEventId;
  * (public) signing key. (12 bytes also accounts for tlv indicators)
  */
 using gkr = std::pair <thumbPrint, encGK>;
+
+#ifndef SYNCPS_IS_SVS
 static constexpr int max_gkRs = (syncps::maxPubSize - 12) /(32+encGKeySz);
+#else
+static constexpr int max_gkRs = 50;
+#endif
 
 struct DistGKey
 {    
@@ -90,12 +95,17 @@ struct DistGKey
         std::chrono::milliseconds reKeyRandomize = std::chrono::seconds(10),
         std::chrono::milliseconds expirationGB = std::chrono::seconds(60)) :
         m_pubPrefix{pPre},
-        m_sync(wPre, m_syncSigMgr.ref(), m_keySigMgr.ref()),
+        m_sync(wPre, m_syncSigMgr.ref(), m_keySigMgr.ref()
+#ifdef SYNCPS_IS_SVS
+               , cs
+#endif
+        ),
         m_certs{cs},
         m_newKeyCb{std::move(gkeyCb)}, //called when a (new) group key arrives or is created
         m_reKeyInt(reKeyInterval), m_keyRand(reKeyRandomize),
         m_keyLifetime(reKeyInterval + reKeyRandomize)
         {
+#ifndef SYNCPS_IS_SVS
             m_sync.pubLifetime(std::chrono::milliseconds(reKeyInterval + reKeyRandomize + expirationGB));
             m_sync.isExpiredCb([this](auto p) {
                 if(p.getName()[-1].toTimestampMicroseconds() < m_curKeyCT) {
@@ -125,6 +135,7 @@ struct DistGKey
                     }
                     return pOurs;
                 });
+#endif
             if (sodium_init() == -1) exit(EXIT_FAILURE);
             m_tp = m_certs.Chains()[0];
             // creates versions of signing keys for encrypt/decrypt and updates SigMgrs

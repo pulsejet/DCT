@@ -17,6 +17,10 @@
  * syncps, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
  **/
 
+#ifdef SYNCPS_IS_SVS
+#include "svs.hpp"
+#endif
+
 #ifndef SYNCPS_SYNCPS_HPP
 #define SYNCPS_SYNCPS_HPP
 

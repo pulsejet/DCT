@@ -164,9 +164,13 @@ struct DCTmodel {
             psm_{getSigMgr(bs_)},
             wsm_{getWireSigMgr(bs_)},
             syncSm_{psm_.ref(), bs_, pv_},
-            m_sync{syncps::SyncPubsub(wirePrefix() + "/pub", wireSigMgr(), syncSm_)},
+            m_sync{syncps::SyncPubsub(wirePrefix() + "/pub", wireSigMgr(), syncSm_
+#ifdef SYNCPS_IS_SVS
+                   , cs_
+#endif
+            )},
             m_ckd{ bs_.pubVal("#pubPrefix"), bs_.pubVal("#wirePrefix") + "/cert",
-                   [this](auto cert){ addCert(cert);},  [](auto /*p*/){return false;} }
+                   [this](auto cert){ addCert(cert);},  [](auto /*p*/){return false;}, cs_ }
     {
         if(wsm_.ref().type() == SigMgr::stAEAD) {
             m_gkd = new DistGKey(pubPrefix(), wirePrefix() + "/key",
@@ -219,7 +223,9 @@ struct DCTmodel {
     }
 
     auto& setSyncInterestLifetime(std::chrono::milliseconds t) {
+#ifndef SYNCPS_IS_SVS
         m_sync.syncInterestLifetime(t);
+#endif
         return *this;
     }
     auto schedule(std::chrono::nanoseconds after, const std::function<void()>& cb) {

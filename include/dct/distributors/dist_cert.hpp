@@ -61,11 +61,15 @@ struct DistCert
     std::unordered_set<size_t> m_initialPubs{};
     log4cxx::LoggerPtr staticModuleLogger{log4cxx::Logger::getLogger("certDist")};
 
-    DistCert(const std::string& pPre, const std::string& wPre, addCertCb&& addCb, syncps::IsExpiredCb&& eCb) :
+    DistCert(const std::string& pPre, const std::string& wPre, addCertCb&& addCb, syncps::IsExpiredCb&& eCb, certStore cs_) :
         m_pubPrefix{pPre},
-        m_sync(wPre, m_syncSigMgr.ref(), m_certSigMgr.ref()),
-        m_addCertCb{std::move(addCb)}
+        m_sync(wPre, m_syncSigMgr.ref(), m_certSigMgr.ref()
+#ifdef SYNCPS_IS_SVS
+               , cs_
+#endif
+        ), m_addCertCb{std::move(addCb)}
     {
+#ifndef SYNCPS_IS_SVS
         m_sync.pubLifetime(std::chrono::milliseconds(0)); // pubs don't auto expire
         m_sync.isExpiredCb(std::move(eCb));
         m_sync.filterPubsCb([](auto& pOurs, auto& pOthers) mutable {
@@ -73,6 +77,7 @@ struct DistCert
                     pOurs.insert(pOurs.end(), pOthers.begin(), pOthers.end());
                     return pOurs;
                 });
+#endif
         m_sync.subscribeTo(m_pubPrefix, [this](auto p) {onReceiveCert(reinterpret_cast<const dctCert&>(p));});
     }
 
