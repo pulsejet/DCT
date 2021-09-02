@@ -69,6 +69,7 @@ struct DistCert
 #endif
         ), m_addCertCb{std::move(addCb)}
     {
+        (void) eCb;
 #ifndef SYNCPS_IS_SVS
         m_sync.syncInterestLifetime(std::chrono::milliseconds(359));   // (quick refresh until have peer)
         m_sync.syncDataLifetime(std::chrono::milliseconds(877));       // (data caching not useful)

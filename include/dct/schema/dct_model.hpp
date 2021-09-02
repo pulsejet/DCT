@@ -223,6 +223,7 @@ struct DCTmodel {
     }
 
     auto& setSyncInterestLifetime(std::chrono::milliseconds t) {
+        (void) t;
 #ifndef SYNCPS_IS_SVS
         m_sync.syncInterestLifetime(t);
 #endif

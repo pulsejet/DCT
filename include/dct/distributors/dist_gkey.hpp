@@ -105,6 +105,7 @@ struct DistGKey
         m_reKeyInt(reKeyInterval), m_keyRand(reKeyRandomize),
         m_keyLifetime(reKeyInterval + reKeyRandomize)
         {
+            (void) expirationGB;
 #ifndef SYNCPS_IS_SVS
             m_sync.pubLifetime(std::chrono::milliseconds(reKeyInterval + reKeyRandomize + expirationGB));
             m_sync.isExpiredCb([this](auto p) {
