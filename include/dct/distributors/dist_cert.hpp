@@ -125,7 +125,9 @@ struct DistCert
                         if (! m_havePeer && (!acked || m_initialPubs.empty())) {
                             if (acked) {
                                 m_havePeer = true;
+#ifndef SYNCPS_IS_SVS
                                 m_sync.syncInterestLifetime(std::chrono::milliseconds(13537)); // (long prime interval)
+#endif
                             }
                             m_connCb(acked);
                         }
