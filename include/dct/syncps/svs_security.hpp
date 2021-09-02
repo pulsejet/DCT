@@ -19,7 +19,7 @@ public:
     {
         auto indData = ndn::toInd(data);
         if (m_sigmgr.validateDecrypt(indData)) {
-            return successCb(data);
+            return successCb(ndn_ind::toCxx(indData));
         } else {
             return failureCb(data, ndn::security::ValidationError(100, "DCT Validation Fail"));
         }
