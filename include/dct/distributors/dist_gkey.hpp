@@ -163,7 +163,7 @@ struct DistGKey
             m_init = false;
         } else {
             // random delay
-            auto dly = 10 + 10*randombytes_uniform((uint32_t)49); //libsodium
+            auto dly = 500 + 10*randombytes_uniform((uint32_t)49); //libsodium
             _LOG_INFO("DistGKey::setUp set random delay " << dly <<
                     "ms before trying to become key creator");
             m_timer = m_sync.schedule(std::chrono::milliseconds(dly), [this](){
