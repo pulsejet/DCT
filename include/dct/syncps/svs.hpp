@@ -109,6 +109,7 @@ class SyncPubsub
     {
         ndn::svs::SecurityOptions opts(m_keyChain);
         opts.interestSigner->signingInfo.setSigningHmacKey("hello");
+        opts.nRetriesOnValidationFail = 5;
         opts.validator = std::make_shared<DCTValidator>(m_sigmgr);
         opts.dataSigner = std::make_shared<DCTSigner>(m_sigmgr);
         opts.encapsulatedDataValidator = std::make_shared<DCTValidator>(m_pubSigmgr);
