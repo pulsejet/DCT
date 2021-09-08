@@ -108,10 +108,12 @@ class SyncPubsub
           staticModuleLogger{log4cxx::Logger::getLogger(m_syncPrefix.toUri())}
     {
         ndn::svs::SecurityOptions opts(m_keyChain);
-        opts.interestSigner->signingInfo.setSigningHmacKey("hello");
         opts.nRetriesOnValidationFail = 5;
+
         opts.validator = std::make_shared<DCTValidator>(m_sigmgr);
         opts.dataSigner = std::make_shared<DCTSigner>(m_sigmgr);
+        opts.interestSigner = std::make_shared<DCTSigner>(m_sigmgr);
+
         opts.encapsulatedDataValidator = std::make_shared<DCTValidator>(m_pubSigmgr);
 
         m_svs = std::make_shared<ndn::svs::SVSPubSub>(
@@ -121,6 +123,12 @@ class SyncPubsub
             [](const auto& /*v*/) {},
             opts
         );
+    }
+
+    std::shared_ptr<ndn::svs::SVSPubSub>
+    getSVSPS()
+    {
+        return m_svs;
     }
 
     /**

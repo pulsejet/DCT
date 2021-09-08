@@ -141,6 +141,12 @@ struct DistGKey
             m_tp = m_certs.Chains()[0];
             // creates versions of signing keys for encrypt/decrypt and updates SigMgrs
             updateSigningKey(m_certs.key(m_tp), m_certs[m_tp]);
+
+#ifdef SYNCPS_IS_SVS
+            m_sync.schedule(std::chrono::milliseconds(800), [this](){
+                m_sync.getSVSPS()->getSVSync().getCore().sendSyncInterest();
+            });
+#endif
         }
 
     /*
@@ -163,7 +169,7 @@ struct DistGKey
             m_init = false;
         } else {
             // random delay
-            auto dly = 500 + 10*randombytes_uniform((uint32_t)49); //libsodium
+            auto dly = 4000 + 10*randombytes_uniform((uint32_t)49); //libsodium
             _LOG_INFO("DistGKey::setUp set random delay " << dly <<
                     "ms before trying to become key creator");
             m_timer = m_sync.schedule(std::chrono::milliseconds(dly), [this](){

@@ -21,8 +21,51 @@ public:
         if (m_sigmgr.validateDecrypt(indData)) {
             return successCb(ndn_ind::toCxx(indData));
         } else {
-            return failureCb(data, ndn::security::ValidationError(100, "DCT Validation Fail"));
+            if (failureCb)
+            {
+                failureCb(data, ndn::security::ValidationError(100, "DCT Validation Fail"));
+            }
+            return;
         }
+    }
+
+    void
+    validate(const ndn::Interest& interest,
+             const ndn::security::InterestValidationSuccessCallback& successCb,
+             const ndn::security::InterestValidationFailureCallback& failureCb)
+    {
+        if (interest.isSigned())
+        {
+            ndn::Block block = interest.getSignatureValue().blockFromValue();
+            ndn_ind::Data indData;
+            indData.wireDecode(block.wire(), block.size());
+            indData.setName(ndn::toInd(interest.getName().getPrefix(-1)));
+
+            if (m_sigmgr.validateDecrypt(indData))
+            {
+                // std::cout << "IVP: " << interest.getName().getPrefix(-2) << std::endl;
+                return successCb(interest);
+            }
+            else
+            {
+                // std::cout << "IVF: " << interest.getName().getPrefix(-2) << std::endl;
+                if (failureCb)
+                {
+                    failureCb(interest, ndn::security::ValidationError(100, "DCT Validation Fail"));
+                }
+                return;
+            }
+        }
+        else
+        {
+            if (failureCb)
+            {
+                failureCb(interest, ndn::security::ValidationError(100, "No signature on interest"));
+            }
+            return;
+        }
+
+        return successCb(interest);
     }
 
 private:
@@ -32,9 +75,11 @@ private:
 class DCTSigner : public ndn::svs::BaseSigner
 {
 public:
-    DCTSigner(SigMgr& wsig) :
-        m_sigmgr(wsig)
-    {}
+    DCTSigner(SigMgr& wsig)
+    : m_sigmgr(wsig)
+    {
+        signingInfo.setSigningKeyName("/ndn");
+    }
 
     void
     sign(ndn::Data& data) const override
@@ -45,6 +90,24 @@ public:
         }
         auto wire = indData.wireEncode();
         data.wireDecode(ndn::Block(wire.buf(), wire.size()));
+    }
+
+    void
+    sign(ndn::Interest& interest) const override
+    {
+        ndn_ind::Data indData(ndn::toInd(interest.getName().getPrefix(-1)));
+        indData.setContent(interest.getApplicationParameters().wire(), interest.getApplicationParameters().size());
+        if (!m_sigmgr.sign(indData)) {
+            return;
+        };
+
+        indData.setName("/");
+        auto blob = indData.wireEncode();
+
+        ndn::SignatureInfo si;
+        si.setSignatureType(ndn::tlv::SignatureTypeValue::SignatureSha256WithEcdsa);
+        interest.setSignatureInfo(si);
+        interest.setSignatureValue(ndn::Block(blob.buf(), blob.size()).getBuffer());
     }
 
 private:
