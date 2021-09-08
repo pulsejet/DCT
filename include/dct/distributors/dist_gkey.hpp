@@ -141,12 +141,6 @@ struct DistGKey
             m_tp = m_certs.Chains()[0];
             // creates versions of signing keys for encrypt/decrypt and updates SigMgrs
             updateSigningKey(m_certs.key(m_tp), m_certs[m_tp]);
-
-#ifdef SYNCPS_IS_SVS
-            m_sync.schedule(std::chrono::milliseconds(800), [this](){
-                m_sync.getSVSPS()->getSVSync().getCore().sendSyncInterest();
-            });
-#endif
         }
 
     /*

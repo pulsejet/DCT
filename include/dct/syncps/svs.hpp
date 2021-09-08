@@ -22,6 +22,8 @@
 
 #include <map>
 
+#include <log4cxx/logger.h>
+
 #include "ndn-cxx-ind.hpp"
 #include <ndn-svs/svspubsub.hpp>
 
