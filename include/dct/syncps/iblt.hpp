@@ -92,7 +92,7 @@ class HashTableEntry
     bool isPure() const
     {
         if (count == 1 || count == -1) {
-            uint32_t check = ndn::CryptoLite::murmurHash3(N_HASHCHECK, keySum);
+            uint32_t check = ndn_ind::CryptoLite::murmurHash3(N_HASHCHECK, keySum);
             return keyCheck == check;
         }
         return false;
@@ -150,7 +150,7 @@ class IBLT
      * @param ibltName the Component representation of IBLT
      * @throws Error if size of values is not compatible with this IBF
      */
-    void initialize(const ndn::Name::Component& ibltName)
+    void initialize(const ndn_ind::Name::Component& ibltName)
     {
         const auto& values = extractValueFromName(ibltName);
 
@@ -175,17 +175,17 @@ class IBLT
     auto hash0(size_t key) const noexcept
     {
         auto stsize = m_hashTable.size() / N_HASH;
-        return ndn::CryptoLite::murmurHash3(0, key) % stsize;
+        return ndn_ind::CryptoLite::murmurHash3(0, key) % stsize;
     }
     auto hash1(size_t key) const noexcept
     {
         auto stsize = m_hashTable.size() / N_HASH;
-        return ndn::CryptoLite::murmurHash3(1, key) % stsize + stsize;
+        return ndn_ind::CryptoLite::murmurHash3(1, key) % stsize + stsize;
     }
     auto hash2(size_t key) const noexcept
     {
         auto stsize = m_hashTable.size() / N_HASH;
-        return ndn::CryptoLite::murmurHash3(2, key) % stsize + stsize * 2;
+        return ndn_ind::CryptoLite::murmurHash3(2, key) % stsize + stsize * 2;
     }
 
     /** validity checking for 'key' on peel or delete
@@ -289,7 +289,7 @@ class IBLT
      *
      * @param name
      */
-    void appendToName(ndn::Name& name) const
+    void appendToName(ndn_ind::Name& name) const
     {
         size_t n = m_hashTable.size();
         size_t unitSize = (32 * 3) / 8;  // hard coding
@@ -343,7 +343,7 @@ class IBLT
      * @return a uint32_t vector representing the hash table of the IBLT
      */
     std::vector<uint32_t> extractValueFromName(
-        const ndn::Name::Component& ibltName) const
+        const ndn_ind::Name::Component& ibltName) const
     {
         std::string compressed
           (ibltName.getValue().buf(),
@@ -377,12 +377,12 @@ class IBLT
 
         for (size_t i = 0; i < N_HASH; i++) {
             size_t startEntry = i * bucketsPerHash;
-            uint32_t h = ndn::CryptoLite::murmurHash3(i, key);
+            uint32_t h = ndn_ind::CryptoLite::murmurHash3(i, key);
             HashTableEntry& entry =
                 m_hashTable.at(startEntry + (h % bucketsPerHash));
             entry.count += plusOrMinus;
             entry.keySum ^= key;
-            entry.keyCheck ^= ndn::CryptoLite::murmurHash3(N_HASHCHECK, key);
+            entry.keyCheck ^= ndn_ind::CryptoLite::murmurHash3(N_HASHCHECK, key);
         }
     }
 

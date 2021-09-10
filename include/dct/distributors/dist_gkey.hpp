@@ -50,7 +50,7 @@ using thumbPrint = std::array<uint8_t,32>;
 using connectedCb = std::function<void(bool)>;
 using pubCnt = uint16_t;
 using addKeyCb = std::function<void(const keyVal&, uint64_t)>;
-using Timer = ndn::scheduler::ScopedEventId;
+using Timer = ndn_ind::scheduler::ScopedEventId;
 
 /*
  * DistGKey Publications contain the creation time of the symmetric key and a list of
@@ -59,11 +59,16 @@ using Timer = ndn::scheduler::ScopedEventId;
  * (public) signing key. (12 bytes also accounts for tlv indicators)
  */
 using gkr = std::pair <thumbPrint, encGK>;
+
+#ifndef SYNCPS_IS_SVS
 static constexpr int max_gkRs = (syncps::maxPubSize - 12) /(32+encGKeySz);
+#else
+static constexpr int max_gkRs = 50;
+#endif
 
 struct DistGKey
 {    
-    ndn::Name m_pubPrefix;     //prefix for group symmetric key
+    ndn_ind::Name m_pubPrefix;     //prefix for group symmetric key
     SigMgrAny m_syncSigMgr{sigMgrByType("EdDSA")};      // to sign/validate SyncData packets
     SigMgrAny m_keySigMgr{sigMgrByType("EdDSA")};    // to sign/validate key list Publications
     syncps::SyncPubsub m_sync;
@@ -90,12 +95,18 @@ struct DistGKey
         std::chrono::milliseconds reKeyRandomize = std::chrono::seconds(10),
         std::chrono::milliseconds expirationGB = std::chrono::seconds(60)) :
         m_pubPrefix{pPre},
-        m_sync(wPre, m_syncSigMgr.ref(), m_keySigMgr.ref()),
+        m_sync(wPre, m_syncSigMgr.ref(), m_keySigMgr.ref()
+#ifdef SYNCPS_IS_SVS
+               , cs
+#endif
+        ),
         m_certs{cs},
         m_newKeyCb{std::move(gkeyCb)}, //called when a (new) group key arrives or is created
         m_reKeyInt(reKeyInterval), m_keyRand(reKeyRandomize),
         m_keyLifetime(reKeyInterval + reKeyRandomize)
         {
+            (void) expirationGB;
+#ifndef SYNCPS_IS_SVS
             m_sync.pubLifetime(std::chrono::milliseconds(reKeyInterval + reKeyRandomize + expirationGB));
             m_sync.isExpiredCb([this](auto p) {
                 if(p.getName()[-1].toTimestampMicroseconds() < m_curKeyCT) {
@@ -125,6 +136,7 @@ struct DistGKey
                     }
                     return pOurs;
                 });
+#endif
             if (sodium_init() == -1) exit(EXIT_FAILURE);
             m_tp = m_certs.Chains()[0];
             // creates versions of signing keys for encrypt/decrypt and updates SigMgrs
@@ -151,7 +163,7 @@ struct DistGKey
             m_init = false;
         } else {
             // random delay
-            auto dly = 10 + 10*randombytes_uniform((uint32_t)49); //libsodium
+            auto dly = 4000 + 10*randombytes_uniform((uint32_t)49); //libsodium
             _LOG_INFO("DistGKey::setUp set random delay " << dly <<
                     "ms before trying to become key creator");
             m_timer = m_sync.schedule(std::chrono::milliseconds(dly), [this](){
@@ -218,7 +230,7 @@ struct DistGKey
      */
     void addToCollection(pubCnt d, std::chrono::system_clock::time_point ts, const std::vector<uint8_t>& c)
     {
-        ndn::Name n(m_pubPrefix);
+        ndn_ind::Name n(m_pubPrefix);
         n.append(sysID());   //for development/debug
         n.appendNumber(d);
         n.appendTimestamp(ts);

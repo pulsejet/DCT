@@ -17,6 +17,10 @@
  * syncps, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
  **/
 
+#ifdef SYNCPS_IS_SVS
+#include "svs.hpp"
+#endif
+
 #ifndef SYNCPS_SYNCPS_HPP
 #define SYNCPS_SYNCPS_HPP
 
@@ -42,11 +46,11 @@ namespace syncps
 {
 INIT_LOGGER("syncps");
 
-using Name = ndn::Name;         // type of a name
-using Publication = ndn::Data;  // type of a publication
+using Name = ndn_ind::Name;         // type of a name
+using Publication = ndn_ind::Data;  // type of a publication
 using PubVec = std::vector<Publication>;
-using ScopedEventId = ndn::scheduler::ScopedEventId; // scheduler events
-using Timer = ndn::scheduler::ScopedEventId; // for key-distributors
+using ScopedEventId = ndn_ind::scheduler::ScopedEventId; // scheduler events
+using Timer = ndn_ind::scheduler::ScopedEventId; // for key-distributors
 
 enum class tlv : uint8_t {
     Data = 6,           // Publication (AKA NDN Data object)
@@ -92,7 +96,7 @@ using FilterPubsCb = std::function<VPubPtr(VPubPtr&,VPubPtr&)>;
  * publications from others are received. Publications are automatically
  * deleted (without notice) at the end their lifetime.
  *
- * Publications are named, signed objects (ndn::Data). The last component of
+ * Publications are named, signed objects (ndn_ind::Data). The last component of
  * their name is a version number (local ms clock) that is used to bound the
  * pub lifetime. This component is added by 'publish' before the publication
  * is signed so it is protected against replay attacks. App publications
@@ -106,12 +110,12 @@ class SyncPubsub
     using Nonce = std::array<uint8_t,4>; // Interest Nonce format
     struct Error : public std::runtime_error { using std::runtime_error::runtime_error; };
 
-    static ndn::AsyncFace& getFace() {
-        static ndn::AsyncFace* face{};
+    static ndn_ind::AsyncFace& getFace() {
+        static ndn_ind::AsyncFace* face{};
         if (face == nullptr) {
-            face = new ndn::AsyncFace();
+            face = new ndn_ind::AsyncFace();
             // Use the default certificate to sign commands.
-            ndn::KeyChain* kc = new ndn::KeyChain();
+            ndn_ind::KeyChain* kc = new ndn_ind::KeyChain();
             face->setCommandSigningInfo(*kc, kc->getDefaultCertificateName());
         }
         return *face;
@@ -129,7 +133,7 @@ class SyncPubsub
      */
     SyncPubsub(Name syncPrefix, SigMgr& wsig, SigMgr& psig) : SyncPubsub(getFace(), syncPrefix, wsig, psig) {}
 
-    SyncPubsub(ndn::AsyncFace& face, Name syncPrefix, SigMgr& wsig, SigMgr& psig)
+    SyncPubsub(ndn_ind::AsyncFace& face, Name syncPrefix, SigMgr& wsig, SigMgr& psig)
         : m_face(face),
           m_syncPrefix(std::move(syncPrefix)),
           m_scheduler(m_face.getIoService()),
@@ -336,12 +340,12 @@ class SyncPubsub
 
         // Build and ship the interest. Format is
         // /<sync-prefix>/<ourLatestIBF>
-        ndn::Name name = m_syncPrefix;
+        ndn_ind::Name name = m_syncPrefix;
         m_iblt.appendToName(name);
 
-        ndn::Interest syncInterest(name);
-        ndn::CryptoLite::generateRandomBytes(m_nonce.data(), m_nonce.size());
-        syncInterest.setNonce(ndn::Blob{m_nonce.data(), m_nonce.size()})
+        ndn_ind::Interest syncInterest(name);
+        ndn_ind::CryptoLite::generateRandomBytes(m_nonce.data(), m_nonce.size());
+        syncInterest.setNonce(ndn_ind::Blob{m_nonce.data(), m_nonce.size()})
             .setCanBePrefix(true)
             .setMustBeFresh(true)
             .setInterestLifetime(m_syncInterestLifetime);
@@ -385,11 +389,11 @@ class SyncPubsub
      * @param prefixName prefix registration that matched interest
      * @param interest   interest packet
      */
-    void onSyncInterest(const ndn::Name& prefixName, const ndn::Interest& interest)
+    void onSyncInterest(const ndn_ind::Name& prefixName, const ndn_ind::Interest& interest)
     {
         if (std::equal(m_nonce.begin(), m_nonce.end(), interest.getNonce()->begin())) return; // interest looped back
 
-        const ndn::Name& name = interest.getName();
+        const Name& name = interest.getName();
         _LOG_DEBUG(format(fmt::runtime("onSyncInterest {:x}/{:x}"), hashIBLT(name),
                     *(uint32_t*)interest.getNonce().buf()));
 
@@ -412,7 +416,7 @@ class SyncPubsub
         if (name.size() && expires > now) if (handleInterest(name)) expires = now;
     }
 
-    bool handleInterest(const ndn::Name& name)
+    bool handleInterest(const ndn_ind::Name& name)
     {
         // 'Peeling' the difference between the peer's iblt & ours gives
         // two sets:
@@ -495,10 +499,10 @@ class SyncPubsub
      *              (data packet's base name)
      * @param pubs  vector of publications (data packet's payload)
      */
-    void sendSyncData(const ndn::Name& name, const VPubPtr& pubs)
+    void sendSyncData(const ndn_ind::Name& name, const VPubPtr& pubs)
     {
         _LOG_DEBUG(format(fmt::runtime("sendSyncData {:x} {}"), hashIBLT(name), name.toUri()));
-        ndn::Data data(name);
+        ndn_ind::Data data(name);
         // data only useful until iblt changes so limit freshness
         data.getMetaInfo().setFreshnessPeriod(m_syncDataLifetime);
         //data.getMetaInfo().setType(tlv::syncpsContent);
@@ -568,7 +572,7 @@ class SyncPubsub
      * @param interest interest for which we got the data
      * @param data     sync data content
      */
-    void onValidData(const ndn::Interest& interest, const ndn::Data& data)
+    void onValidData(const ndn_ind::Interest& interest, const ndn_ind::Data& data)
     {
         _LOG_DEBUG(format(fmt::runtime("onValidData {:x}/{:x} {}"), hashIBLT(interest.getName()),
                     *(uint32_t*)interest.getNonce().buf(), data.getName().toUri()));
@@ -629,7 +633,7 @@ class SyncPubsub
     uint32_t hashPub(const Publication& pub) const
     {
         const auto& b = *pub.wireEncode();
-        return ndn::CryptoLite::murmurHash3(N_HASHCHECK, b.data(), b.size());
+        return ndn_ind::CryptoLite::murmurHash3(N_HASHCHECK, b.data(), b.size());
     }
 
     bool isKnown(uint32_t h) const
@@ -702,7 +706,7 @@ class SyncPubsub
      *
      * @param prefix
      */
-    void onRegisterFailed(const ndn::Name& prefix) const
+    void onRegisterFailed(const ndn_ind::Name& prefix) const
     {
         _LOG_ERROR("onRegisterFailed " << prefix.toUri());
         BOOST_THROW_EXCEPTION(Error("onRegisterFailed " + prefix.toUri()));
@@ -711,14 +715,14 @@ class SyncPubsub
     uint32_t hashIBLT(const Name& n) const
     {
         const auto& b = n[-1].getValue();
-        return ndn::CryptoLite::murmurHash3(N_HASHCHECK, b.buf(), b.size());
+        return ndn_ind::CryptoLite::murmurHash3(N_HASHCHECK, b.buf(), b.size());
     }
 
   private:
-    ndn::AsyncFace& m_face;
-    ndn::Name m_syncPrefix;
-    ndn::scheduler::Scheduler m_scheduler;
-    std::pair<ndn::Name,std::chrono::system_clock::time_point> m_interest{};
+    ndn_ind::AsyncFace& m_face;
+    ndn_ind::Name m_syncPrefix;
+    ndn_ind::scheduler::Scheduler m_scheduler;
+    std::pair<ndn_ind::Name,std::chrono::system_clock::time_point> m_interest{};
     IBLT m_iblt;
     IBLT m_pcbiblt;
     // currently active published items
@@ -732,7 +736,7 @@ class SyncPubsub
     std::chrono::milliseconds m_syncDataLifetime{std::chrono::seconds(3)};
     std::chrono::milliseconds m_pubLifetime{maxPubLifetime};
     std::chrono::milliseconds m_pubExpirationGB{maxPubLifetime};
-    ndn::scheduler::ScopedEventId m_scheduledSyncInterestId;
+    ndn_ind::scheduler::ScopedEventId m_scheduledSyncInterestId;
     log4cxx::LoggerPtr staticModuleLogger;
     uint64_t m_registeredPrefix;
     Nonce  m_nonce{};               // nonce of current sync interest

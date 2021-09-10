@@ -50,8 +50,8 @@ using connectedCb = std::function<void(bool)>;
  */
 
 struct DistCert
-{    
-    ndn::Name m_pubPrefix;  //prefix for subscribeTo()
+{
+    ndn_ind::Name m_pubPrefix;  //prefix for subscribeTo()
     SigMgrAny m_syncSigMgr{sigMgrByType("RFC7693")}; // to sign/validate SyncData packets
     SigMgrAny m_certSigMgr{sigMgrByType("NULL")};   // to sign/validate Publications
     syncps::SyncPubsub m_sync;
@@ -61,11 +61,16 @@ struct DistCert
     std::unordered_set<size_t> m_initialPubs{};
     log4cxx::LoggerPtr staticModuleLogger{log4cxx::Logger::getLogger("certDist")};
 
-    DistCert(const std::string& pPre, const std::string& wPre, addCertCb&& addCb, syncps::IsExpiredCb&& eCb) :
+    DistCert(const std::string& pPre, const std::string& wPre, addCertCb&& addCb, syncps::IsExpiredCb&& eCb, certStore cs_) :
         m_pubPrefix{pPre},
-        m_sync(wPre, m_syncSigMgr.ref(), m_certSigMgr.ref()),
-        m_addCertCb{std::move(addCb)}
+        m_sync(wPre, m_syncSigMgr.ref(), m_certSigMgr.ref()
+#ifdef SYNCPS_IS_SVS
+               , cs_
+#endif
+        ), m_addCertCb{std::move(addCb)}
     {
+        (void) eCb;
+#ifndef SYNCPS_IS_SVS
         m_sync.syncInterestLifetime(std::chrono::milliseconds(359));   // (quick refresh until have peer)
         m_sync.syncDataLifetime(std::chrono::milliseconds(877));       // (data caching not useful)
         m_sync.pubLifetime(std::chrono::milliseconds(0)); // pubs don't auto expire
@@ -75,6 +80,7 @@ struct DistCert
                     pOurs.insert(pOurs.end(), pOthers.begin(), pOthers.end());
                     return pOurs;
                 });
+#endif
         m_sync.subscribeTo(m_pubPrefix, [this](auto p) {onReceiveCert(reinterpret_cast<const dctCert&>(p));});
     }
 
@@ -111,16 +117,18 @@ struct DistCert
     void initialPub(certPub&& c) {
         _LOG_INFO("initialPub " << c.getName());
         if (! m_havePeer) {
-            m_initialPubs.emplace(std::hash<ndn::Data>{}(c));
+            m_initialPubs.emplace(std::hash<ndn_ind::Data>{}(c));
             m_sync.publish(std::move(c),
-                    [this](const ndn::Data& d, bool acked) {
+                    [this](const ndn_ind::Data& d, bool acked) {
                         _LOG_INFO("wasDelivered: " << acked << " " << d.getName().toUri());
-                        auto item = std::hash<ndn::Data>{}(d);
+                        auto item = std::hash<ndn_ind::Data>{}(d);
                         if (m_initialPubs.contains(item)) m_initialPubs.erase(item);
                         if (! m_havePeer && (!acked || m_initialPubs.empty())) {
                             if (acked) {
-                                m_havePeer = true; 
+                                m_havePeer = true;
+#ifndef SYNCPS_IS_SVS
                                 m_sync.syncInterestLifetime(std::chrono::milliseconds(13537)); // (long prime interval)
+#endif
                             }
                             m_connCb(acked);
                         }

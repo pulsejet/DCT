@@ -39,7 +39,7 @@
 #include "dct/distributors/dist_gkey.hpp"
 
 
-using Publication = ndn::Data;
+using Publication = ndn_ind::Data;
 
 //template<typename sPub>
 struct DCTmodel {
@@ -164,9 +164,13 @@ struct DCTmodel {
             psm_{getSigMgr(bs_)},
             wsm_{getWireSigMgr(bs_)},
             syncSm_{psm_.ref(), bs_, pv_},
-            m_sync{syncps::SyncPubsub(wirePrefix() + "/pub", wireSigMgr(), syncSm_)},
+            m_sync{syncps::SyncPubsub(wirePrefix() + "/pub", wireSigMgr(), syncSm_
+#ifdef SYNCPS_IS_SVS
+                   , cs_
+#endif
+            )},
             m_ckd{ bs_.pubVal("#pubPrefix"), bs_.pubVal("#wirePrefix") + "/cert",
-                   [this](auto cert){ addCert(cert);},  [](auto /*p*/){return false;} }
+                   [this](auto cert){ addCert(cert);},  [](auto /*p*/){return false;}, cs_ }
     {
         if(wsm_.ref().type() == SigMgr::stAEAD) {
             m_gkd = new DistGKey(pubPrefix(), wirePrefix() + "/key",
@@ -192,8 +196,8 @@ struct DCTmodel {
         const auto& tp = cs_.Chains()[0]; // thumbprint of signing cert
         pubSigMgr().updateSigningKey(cs_.key(tp), cs_[tp]);
         wireSigMgr().updateSigningKey(cs_.key(tp), cs_[tp]);
-        pubSigMgr().setKeyCb([&cs=cs_](const ndn::Data& d) -> const keyVal& { return *(cs[d].getContent()); });
-        wireSigMgr().setKeyCb([&cs=cs_](const ndn::Data& d) -> const keyVal& { return *(cs[d].getContent()); });
+        pubSigMgr().setKeyCb([&cs=cs_](const ndn_ind::Data& d) -> const keyVal& { return *(cs[d].getContent()); });
+        wireSigMgr().setKeyCb([&cs=cs_](const ndn_ind::Data& d) -> const keyVal& { return *(cs[d].getContent()); });
 
 
         // SPub need access to builder's 'index' function to translate component names to indices
@@ -219,7 +223,10 @@ struct DCTmodel {
     }
 
     auto& setSyncInterestLifetime(std::chrono::milliseconds t) {
+        (void) t;
+#ifndef SYNCPS_IS_SVS
         m_sync.syncInterestLifetime(t);
+#endif
         return *this;
     }
     auto schedule(std::chrono::nanoseconds after, const std::function<void()>& cb) {

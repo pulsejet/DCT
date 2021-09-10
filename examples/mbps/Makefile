@@ -1,6 +1,8 @@
 # on a mac need to set PKG_CONFIG_PATH=/usr/local/lib/pkgconfig
 # the code *requires* C++ 20 or later
 
+USE_SVS = 1
+
 INCLUDES = ../../include
 #CXXFLAGS = -g -O0 -I. -I$(INCLUDES) -Wall -Wextra -std=c++20 -I/opt/local/include
 #CXXFLAGS += -fsanitize=address,undefined
@@ -23,6 +25,11 @@ else
 # ubuntu packages are compiled with gcc and its sanitizer doesn't cooperate with clang's
 CXX=c++
 LIBS += -lboost_iostreams -llog4cxx -lpthread -lsodium -lcrypto
+endif
+
+ifeq ($(USE_SVS), 1)
+LIBS += -lndn-svs -lndn-cxx
+CXXFLAGS += -DSYNCPS_IS_SVS
 endif
 
 #all: $(BINS)

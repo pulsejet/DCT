@@ -55,7 +55,7 @@ struct SigMgrSHA256 final : SigMgr {
     SigMgrSHA256() : SigMgr(stSHA256, {0x16, 0x03, 0x1b, 0x01, stSHA256}) {
         if (sodium_init() == -1) exit(EXIT_FAILURE);
     }
-    bool sign(ndn::Data& data, const SigInfo& si, const keyVal&) override final {
+    bool sign(ndn_ind::Data& data, const SigInfo& si, const keyVal&) override final {
         // get Data in wire format then compute the SHA256 hash of the signed part
         auto dataWF = setupSignature(data, si);
         std::vector<uint8_t> sigValue (crypto_hash_sha256_BYTES,0);
@@ -68,11 +68,11 @@ struct SigMgrSHA256 final : SigMgr {
         return true;
     }
     /*
-     * ndn::validator has a complex pattern of handing off to ValidatorState, etc
+     * ndn_ind::validator has a complex pattern of handing off to ValidatorState, etc
      * Here just return true if success, false if failure
      * (Should log the reason)
      */
-    bool validate(const ndn::Data& data) override final {
+    bool validate(const ndn_ind::Data& data) override final {
         //get the Signed Portion of Data from wire format
         auto dataWF = data.wireEncode();
         //get its SHA256 hash
@@ -84,7 +84,7 @@ struct SigMgrSHA256 final : SigMgr {
 
         return std::memcmp(sigVal, dataHash.data(), dataHash.size()) == 0;
     }
-    bool validate(const ndn::Data& data, const dct_Cert&) override final { return validate(data); }
+    bool validate(const ndn_ind::Data& data, const dct_Cert&) override final { return validate(data); }
 
     bool needsKey() const noexcept override final { return 0; };
 };

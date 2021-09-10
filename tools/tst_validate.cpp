@@ -32,7 +32,7 @@
 #include "dct/schema/dct_model.hpp"
 
 auto makePub(DCTmodel& dm, const char* nm) {
-    auto n = ndn::Name(nm);
+    auto n = ndn_ind::Name(nm);
 
     DCTmodel::sPub pub{n.appendTimestamp(std::chrono::system_clock::now())};
     std::cout << "signing " << pub.getName() << '\n';
