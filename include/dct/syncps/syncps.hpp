@@ -179,6 +179,10 @@ class SyncPubsub
         m_pubExpirationGB = time > maxClockSkew? time : maxClockSkew;
         return *this;
     }
+    SyncPubsub& badPubCb(UpdateCb cb) {
+        m_badPubCb = cb;
+        return *this;
+    }
 
 
     /**
@@ -589,6 +593,7 @@ class SyncPubsub
             }
             if (m_isExpired(pub) || ! m_pubSigmgr.validate(pub)) {
                 // unwanted pubs have to go in our iblt or we'll keep getting them
+                m_badPubCb(pub);
                 ignorePub(pub);
                 continue;
             }
@@ -758,6 +763,9 @@ class SyncPubsub
             }
             return pOurs;
         } };
+    UpdateCb m_badPubCb{
+        [](auto p) {_LOG_WARN("Received bad Publication");}
+    };
 };
 
 }  // namespace syncps
