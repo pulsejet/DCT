@@ -48,6 +48,7 @@ Vagrant.configure("2") do |config|
     
     git clone https://github.com/named-data/ndn-svs
     cd ndn-svs
+    git checkout develop
     ./waf configure
     ./waf
     sudo ./waf install
@@ -56,7 +57,7 @@ Vagrant.configure("2") do |config|
     rm -rf DCT
     git clone https://github.com/tylerliu/DCT-example.git DCT 
     cd DCT/
-    git checkout dev
+    git checkout main
     cd tools/
     make -j
     cd ../examples/mbps
@@ -68,6 +69,7 @@ Vagrant.configure("2") do |config|
     cd ../../..
     ndnsec key-gen /ndn/alice
     nfd-start || echo
+    nfd strategy set /localnet /localhost/nfd/strategy/multicast/v=4
   SHELL
 end
 
