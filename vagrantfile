@@ -37,9 +37,9 @@ Vagrant.configure("2") do |config|
     sudo ./waf install
     sudo cp /usr/local/etc/ndn/nfd.conf.sample /usr/local/etc/ndn/nfd.conf
     cd ..
-    git clone https://github.com/operantnetworks/ndn-ind
+
+    git clone https://github.com/ucla-irl/ndn-ind
     cd ndn-ind
-    git apply ../NDNpatches/patch.ndn-ind
     ./configure
     make -j
     sudo make install
@@ -69,6 +69,7 @@ Vagrant.configure("2") do |config|
     cd ../../..
     ndnsec key-gen /ndn/alice
     nfd-start || echo
+    sleep 1
     nfd strategy set /localnet /localhost/nfd/strategy/multicast/v=4
   SHELL
 end
