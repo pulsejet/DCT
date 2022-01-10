@@ -2,6 +2,21 @@
 
 This repository contains Pollere's **evolving** work on tools to enable data-centric applications (with a focus on "edge" applications). DCT is an effort to make data/information-centric applications easier to write and secure. DCT reflects Pollere's needs and will update with our needs but the intention is a toolkit for general use. The toolkit currently uses a version of the Named-Data Networking Forwarder (NFD) with Pollere's patches, with a future goal of something less fragile and more broadcast media friendly.
 
+## State Vector Sync
+
+This fork replaces the syncps transport with StateVectorSync-PubSub (SVS-PS). Several changes are required for getting this change to work and are described below.
+
+- SVS (ndn-svs) is implemented in ndn-cxx while DCT uses ndn-ind. Since both libraries use the `ndn` namespace, they cannot be used together. To use this fork, you must patch your ndn-ind to use the `ndn_ind` namespace. A fork of ind using this namespace can be accessed [here](https://github.com/ucla-irl/ndn-ind).
+
+- Since DCT uses ndn-ind, DCT must also be patched to use the `ndn_ind` namespace. This change is already present in this fork, but any client applications using DCT need to make the namespace access change.
+
+- To use SVS instead of syncps, `SYNCPS_IS_SVS` must be defined at compile time. A syncps shim is used to transparently replace syncps with SVS.
+
+- Conversions of types between ndn-cxx and ndn-ind can be done by wire-encoding from one library and wire-decoding using the other. Helper functions can be found in [include/ndn-cxx-ind.hpp](include/ndn-cxx-ind.hpp).
+
+
+## Organization
+
 This repository is organized into directories:
 
 - tools: contains tools for using trust schema-based security. The README in this directory describes how the tools can be used to configure a domain to use a DCT trust schema and applications created using DCT. The binary schemaCompile should be added to this directory: download the compressed tar file corresponding to your OS available with the latest release.
