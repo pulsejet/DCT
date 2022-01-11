@@ -55,7 +55,7 @@ Vagrant.configure("2") do |config|
     cd ..
 
     rm -rf DCT
-    git clone https://github.com/tylerliu/DCT-example.git DCT 
+    git clone https://github.com/pulsejet/DCT DCT 
     cd DCT/
     git checkout main
     cd tools/
