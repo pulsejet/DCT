@@ -70,7 +70,7 @@ Vagrant.configure("2") do |config|
     ndnsec key-gen /ndn/alice
     nfd-start || echo
     sleep 1
-    nfd strategy set /localnet /localhost/nfd/strategy/multicast/v=4
+    nfdc strategy set /localnet /localhost/nfd/strategy/multicast/v=4
   SHELL
 end
 
