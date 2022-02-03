@@ -53,6 +53,7 @@ Vagrant.configure("2") do |config|
     ./waf
     sudo ./waf install
     cd ..
+    sudo ldconfig
 
     rm -rf DCT
     git clone https://github.com/pulsejet/DCT DCT 
@@ -67,6 +68,7 @@ Vagrant.configure("2") do |config|
     rm linux-schemaCompile-bin-1.2.0.tgz
     bash sec_bootstrap.sh
     cd ../../..
+    sudo ldconfig
     ndnsec key-gen /ndn/alice
     nfd-start || echo
     sleep 1
